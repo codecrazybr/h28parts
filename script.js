@@ -34,11 +34,13 @@ const expandedPhoto = document.querySelector("#expandedPhoto");
 const closePhotoModalButton = document.querySelector("#closePhotoModal");
 const successToast = document.querySelector("#successToast");
 const deleteToast = document.querySelector("#deleteToast");
+const warningToast = document.querySelector("#warningToast");
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
 let successToastTimer = null;
 let deleteToastTimer = null;
+let warningToastTimer = null;
 let partsCache = [];
 let confirmNeedsPassword = false;
 
@@ -335,6 +337,24 @@ function showDeleteToast() {
   }, 1900);
 }
 
+function showWarningToast(message) {
+  const warningMessage = warningToast.querySelector("p");
+
+  warningMessage.textContent = message;
+  clearTimeout(warningToastTimer);
+  warningToast.classList.remove("active");
+  warningToast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    warningToast.classList.add("active");
+  });
+
+  warningToastTimer = setTimeout(() => {
+    warningToast.classList.remove("active");
+    warningToast.setAttribute("aria-hidden", "true");
+  }, 1900);
+}
+
 function fillEditModal(part) {
   partIdBeingEdited = part.id;
   document.querySelector("#editName").value = part.name;
@@ -565,6 +585,11 @@ partForm.addEventListener("submit", async (event) => {
     showSuccessToast();
     renderResults();
   } catch (error) {
+    if (error.message === "A peça já está cadastrada no sistema.") {
+      showWarningToast(error.message);
+      return;
+    }
+
     formMessage.textContent = error.message;
   }
 });
@@ -596,6 +621,11 @@ editForm.addEventListener("submit", async (event) => {
     closeEditModal();
     renderResults();
   } catch (error) {
+    if (error.message === "A peça já está cadastrada no sistema.") {
+      showWarningToast(error.message);
+      return;
+    }
+
     alert(error.message);
   }
 });

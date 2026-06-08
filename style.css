@@ -404,7 +404,8 @@ input:focus {
 }
 
 .success-toast,
-.delete-toast {
+.delete-toast,
+.warning-toast {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -432,13 +433,20 @@ input:focus {
   color: var(--danger);
 }
 
+.warning-toast {
+  border: 1px solid rgba(233, 154, 90, 0.34);
+  color: var(--orange-dark);
+}
+
 .success-toast.active,
-.delete-toast.active {
+.delete-toast.active,
+.warning-toast.active {
   animation: successPop 1.8s ease forwards;
 }
 
 .success-toast p,
-.delete-toast p {
+.delete-toast p,
+.warning-toast p {
   margin: 0;
   color: var(--blue-deep);
   font-size: 16px;
@@ -448,7 +456,8 @@ input:focus {
 }
 
 .success-check,
-.delete-check {
+.delete-check,
+.warning-check {
   width: 76px;
   height: 76px;
   display: grid;
@@ -466,14 +475,21 @@ input:focus {
   box-shadow: 0 14px 28px rgba(180, 35, 24, 0.28);
 }
 
+.warning-check {
+  background: linear-gradient(180deg, #f0aa67, var(--orange-dark));
+  box-shadow: 0 14px 28px rgba(233, 154, 90, 0.3);
+}
+
 .success-check svg,
-.delete-check svg {
+.delete-check svg,
+.warning-check svg {
   width: 52px;
   height: 52px;
 }
 
 .success-check path,
-.delete-check path {
+.delete-check path,
+.warning-check path {
   fill: none;
   stroke: var(--white);
   stroke-width: 5;
