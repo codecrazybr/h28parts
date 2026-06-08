@@ -37,9 +37,7 @@ body {
 }
 
 .topbar {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 34%),
-    linear-gradient(90deg, var(--blue-deep), var(--blue));
+  background: #173f8f;
   color: var(--white);
   padding: 18px 0;
   border-bottom: 4px solid var(--orange);
@@ -53,11 +51,11 @@ body {
 }
 
 .brand-logo {
-  width: 265px;
+  width: 285px;
   max-width: 44vw;
   height: auto;
   display: block;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.16));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.12));
 }
 
 .topbar h1 {
