@@ -51,7 +51,11 @@
 
         <label>
           Cadastrado por
-          <input id="registeredBy" type="text" autocomplete="off" required>
+          <select id="registeredBy" required>
+            <option value="">Selecione</option>
+            <option value="ANDERSON">ANDERSON</option>
+            <option value="LINDERLÂNIO">LINDERLÂNIO</option>
+          </select>
         </label>
 
         <div class="form-actions">
@@ -122,7 +126,11 @@
 
         <label>
           Cadastrado por
-          <input id="editRegisteredBy" type="text" autocomplete="off" required>
+          <select id="editRegisteredBy" required>
+            <option value="">Selecione</option>
+            <option value="ANDERSON">ANDERSON</option>
+            <option value="LINDERLÂNIO">LINDERLÂNIO</option>
+          </select>
         </label>
 
         <div class="modal-actions">
@@ -172,8 +180,8 @@
     <p>A peça já está cadastrada no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260607-13"></script>
+  <script src="supabase-config.js?v=20260607-15"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260607-13"></script>
+  <script src="script.js?v=20260607-15"></script>
 </body>
 </html>

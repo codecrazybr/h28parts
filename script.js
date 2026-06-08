@@ -129,7 +129,7 @@ async function addPart(part) {
       throw new Error("A peça já está cadastrada no sistema.");
     }
 
-    throw new Error("Não foi possível cadastrar a peça.");
+    throw new Error(error.message || "Não foi possível cadastrar a peça.");
   }
 
   await loadParts();
@@ -159,7 +159,7 @@ async function updatePart(part) {
       throw new Error("A peça já está cadastrada no sistema.");
     }
 
-    throw new Error("Não foi possível atualizar a peça.");
+    throw new Error(error.message || "Não foi possível atualizar a peça.");
   }
 
   await loadParts();
