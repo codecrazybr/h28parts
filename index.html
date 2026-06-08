@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H28 Parts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container header-content">
+      <img class="brand-logo" src="nadir-logo.png" alt="Nadir">
+      <h1>H28 Parts</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" aria-label="Telas do sistema">
+      <button class="tab-button active" type="button" data-screen="registerScreen">Cadastrar Peça</button>
+      <button class="tab-button" type="button" data-screen="searchScreen">Consultar Peça</button>
+    </nav>
+
+    <section id="registerScreen" class="screen active" aria-labelledby="registerTitle">
+      <h2 id="registerTitle">Cadastrar Peça</h2>
+
+      <form id="partForm" class="form">
+        <label>
+          Foto da peça
+          <input id="photo" type="file" accept="image/*">
+        </label>
+
+        <label>
+          Nome da peça
+          <input id="name" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Código da peça
+          <input id="code" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Número do desenho
+          <input id="drawingNumber" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Aplicação
+          <input id="application" type="text" autocomplete="off" required>
+        </label>
+
+        <div class="form-actions">
+          <button class="primary-button" type="submit">Salvar peça</button>
+        </div>
+        <p id="formMessage" class="message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="searchScreen" class="screen" aria-labelledby="searchTitle">
+      <h2 id="searchTitle">Consultar Peça</h2>
+
+      <div class="search-box">
+        <label>
+          Pesquisar por nome, código, número do desenho ou aplicação
+          <input id="searchInput" type="search" autocomplete="off" placeholder="Digite para pesquisar">
+        </label>
+      </div>
+
+      <div id="results" class="results" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div id="confirmModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h2 id="confirmTitle">Confirmar ação</h2>
+      <p id="confirmMessage">Tem certeza?</p>
+      <div class="modal-actions">
+        <button id="cancelAction" class="secondary-button" type="button">Cancelar</button>
+        <button id="confirmAction" class="delete-button" type="button">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <h2 id="editTitle">Editar peça</h2>
+
+      <form id="editForm" class="form">
+        <label>
+          Foto da peça
+          <input id="editPhoto" type="file" accept="image/*">
+        </label>
+
+        <label>
+          Nome da peça
+          <input id="editName" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Código da peça
+          <input id="editCode" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Número do desenho
+          <input id="editDrawingNumber" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Aplicação
+          <input id="editApplication" type="text" autocomplete="off" required>
+        </label>
+
+        <div class="modal-actions">
+          <button id="cancelEditModal" class="secondary-button" type="button">Cancelar</button>
+          <button class="primary-button" type="submit">Salvar edição</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="photoModal" class="modal-overlay" aria-hidden="true">
+    <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Foto ampliada da peça">
+      <button id="closePhotoModal" class="photo-close-button" type="button" aria-label="Fechar foto ampliada">×</button>
+      <img id="expandedPhoto" src="" alt="">
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
