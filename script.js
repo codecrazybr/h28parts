@@ -101,6 +101,8 @@ async function loadParts() {
 }
 
 async function addPart(part) {
+  await loadParts();
+
   if (partsCache.some((item) => normalizeText(item.code) === normalizeText(part.code))) {
     throw new Error("A peça já está cadastrada no sistema.");
   }
@@ -118,7 +120,7 @@ async function addPart(part) {
     .insert(mapSitePart(part));
 
   if (error) {
-    if (error.code === "23505") {
+    if (isDuplicatePartError(error)) {
       throw new Error("A peça já está cadastrada no sistema.");
     }
 
@@ -129,6 +131,8 @@ async function addPart(part) {
 }
 
 async function updatePart(part) {
+  await loadParts();
+
   if (partsCache.some((item) => item.id !== part.id && normalizeText(item.code) === normalizeText(part.code))) {
     throw new Error("A peça já está cadastrada no sistema.");
   }
@@ -146,7 +150,7 @@ async function updatePart(part) {
     .eq("id", part.id);
 
   if (error) {
-    if (error.code === "23505") {
+    if (isDuplicatePartError(error)) {
       throw new Error("A peça já está cadastrada no sistema.");
     }
 
@@ -206,6 +210,19 @@ function fileToBase64(file) {
 
 function normalizeText(value) {
   return value.toLowerCase().trim();
+}
+
+function isDuplicatePartError(error) {
+  const message = normalizeText(error.message || "");
+  const code = error.code || "";
+
+  return (
+    code === "23505" ||
+    message.includes("já está cadastrada") ||
+    message.includes("ja esta cadastrada") ||
+    message.includes("duplicate") ||
+    message.includes("parts_code_unique")
+  );
 }
 
 function partMatchesSearch(part, searchTerm) {
@@ -585,8 +602,8 @@ partForm.addEventListener("submit", async (event) => {
     showSuccessToast();
     renderResults();
   } catch (error) {
-    if (error.message === "A peça já está cadastrada no sistema.") {
-      showWarningToast(error.message);
+    if (isDuplicatePartError(error)) {
+      showWarningToast("A peça já está cadastrada no sistema.");
       return;
     }
 
@@ -621,8 +638,8 @@ editForm.addEventListener("submit", async (event) => {
     closeEditModal();
     renderResults();
   } catch (error) {
-    if (error.message === "A peça já está cadastrada no sistema.") {
-      showWarningToast(error.message);
+    if (isDuplicatePartError(error)) {
+      showWarningToast("A peça já está cadastrada no sistema.");
       return;
     }
 
