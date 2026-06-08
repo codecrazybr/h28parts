@@ -156,7 +156,7 @@ async function removePart(partId, password) {
   });
 
   if (error) {
-    throw new Error("Não foi possível excluir a peça.");
+    throw new Error(error.message || "Não foi possível excluir a peça.");
   }
 
   await loadParts();
