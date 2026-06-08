@@ -26,7 +26,7 @@ body {
     repeating-linear-gradient(90deg, transparent 0, transparent 23px, rgba(47, 68, 147, 0.06) 24px),
     repeating-linear-gradient(0deg, transparent 0, transparent 23px, rgba(47, 68, 147, 0.06) 24px);
   color: var(--gray-800);
-  font-family: Bahnschrift, "Segoe UI", Arial, Helvetica, sans-serif;
+  font-family: "Inter", "Roboto", "Segoe UI", Arial, Helvetica, sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
 }
@@ -37,32 +37,59 @@ body {
 }
 
 .topbar {
-  background: #173f8f;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 32%),
+    linear-gradient(90deg, #12377f 0%, #173f8f 52%, #20499a 100%);
   color: var(--white);
-  padding: 18px 0;
-  border-bottom: 4px solid var(--orange);
-  box-shadow: 0 12px 30px rgba(36, 54, 118, 0.24);
+  padding: 16px 0;
+  border-bottom: 3px solid var(--orange);
+  box-shadow: 0 12px 30px rgba(21, 47, 113, 0.28);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
 }
 
 .brand-logo {
-  width: 285px;
-  max-width: 44vw;
+  width: 250px;
+  max-width: 38vw;
   height: auto;
   display: block;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.12));
 }
 
-.topbar h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  text-transform: uppercase;
+.header-title {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-left: 22px;
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+  font-family: "Montserrat", "Inter", "Roboto", "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+.header-title-main {
+  color: var(--white);
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.header-title-divider {
+  width: 24px;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--orange);
+}
+
+.header-title-sub {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -585,17 +612,34 @@ select:focus {
   .header-content {
     align-items: center;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     text-align: center;
   }
 
   .brand-logo {
-    width: min(240px, 82vw);
+    width: min(250px, 82vw);
     max-width: 82vw;
   }
 
-  .topbar h1 {
-    font-size: 23px;
+  .header-title {
+    min-height: auto;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .header-title-main {
+    font-size: 30px;
+  }
+
+  .header-title-divider {
+    width: 18px;
+  }
+
+  .header-title-sub {
+    font-size: 18px;
   }
 
   .tabs {

@@ -270,8 +270,7 @@ function partMatchesSearch(part, searchTerm) {
     part.name,
     part.code,
     part.drawingNumber,
-    part.application,
-    part.assembly
+    part.application
   ].some((field) => normalizeText(field).includes(searchTerm));
 }
 
@@ -290,7 +289,6 @@ function createPartCard(part) {
   const code = createInfoLine("Código do item:", part.code);
   const drawingNumber = createInfoLine("Número do desenho:", part.drawingNumber);
   const application = createInfoLine("Aplicação:", part.application);
-  const assembly = createInfoLine("Conjunto:", part.assembly || "-");
   const registeredBy = createInfoLine("Cadastrado por:", part.registeredBy || "-");
   const createdAt = createInfoLine("Data de cadastro:", formatDateTime(part.createdAt));
   const updatedAt = createInfoLine("Última atualização:", formatDateTime(part.updatedAt));
@@ -328,7 +326,7 @@ function createPartCard(part) {
   actions.className = "card-actions";
   actions.append(editButton, deleteButton);
 
-  info.append(title, code, drawingNumber, application, assembly, registeredBy, createdAt, updatedAt, actions);
+  info.append(title, code, drawingNumber, application, registeredBy, createdAt, updatedAt, actions);
   card.append(media, info);
 
   return card;
@@ -419,7 +417,6 @@ function fillEditModal(part) {
   document.querySelector("#editCode").value = part.code;
   document.querySelector("#editDrawingNumber").value = part.drawingNumber;
   document.querySelector("#editApplication").value = part.application;
-  document.querySelector("#editAssembly").value = part.assembly || "";
   document.querySelector("#editRegisteredBy").value = part.registeredBy || "";
   document.querySelector("#editPhoto").value = "";
 }
@@ -653,7 +650,7 @@ partForm.addEventListener("submit", async (event) => {
     code: normalizeInputValue(document.querySelector("#code").value),
     drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
     application: normalizeInputValue(document.querySelector("#application").value),
-    assembly: normalizeInputValue(document.querySelector("#assembly").value),
+    assembly: "NAO INFORMADO",
     registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value)
   };
 
@@ -693,7 +690,7 @@ editForm.addEventListener("submit", async (event) => {
     code: normalizeInputValue(document.querySelector("#editCode").value),
     drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
     application: normalizeInputValue(document.querySelector("#editApplication").value),
-    assembly: normalizeInputValue(document.querySelector("#editAssembly").value),
+    assembly: currentPart.assembly || "NAO INFORMADO",
     registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
     createdAt: currentPart.createdAt
   };

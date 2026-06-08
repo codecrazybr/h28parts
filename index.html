@@ -3,14 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>H28 Parts</title>
-  <link rel="stylesheet" href="style.css?v=20260608-17">
+  <title>H28 - Sistema de Consulta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260608-21">
 </head>
 <body>
   <header class="topbar">
     <div class="container header-content">
       <img class="brand-logo" src="nadir-logo.png" alt="Nadir">
-      <h1>H28 Parts</h1>
+      <div class="header-title" aria-label="H28 - Sistema de Consulta">
+        <span class="header-title-main">H28</span>
+        <span class="header-title-divider"></span>
+        <span class="header-title-sub">Sistema de Consulta</span>
+      </div>
     </div>
   </header>
 
@@ -50,11 +57,6 @@
         </label>
 
         <label>
-          Conjunto
-          <input id="assembly" type="text" autocomplete="off" required>
-        </label>
-
-        <label>
           Cadastrado por
           <select id="registeredBy" required>
             <option value="">Selecione</option>
@@ -75,7 +77,7 @@
 
       <div class="search-box">
         <label>
-          Pesquisar por nome, código, número do desenho, aplicação ou conjunto
+          Pesquisar por nome, código, número do desenho ou aplicação
           <input id="searchInput" type="search" autocomplete="off" placeholder="Digite para pesquisar">
         </label>
       </div>
@@ -127,11 +129,6 @@
         <label>
           Aplicação
           <input id="editApplication" type="text" autocomplete="off" required>
-        </label>
-
-        <label>
-          Conjunto
-          <input id="editAssembly" type="text" autocomplete="off" required>
         </label>
 
         <label>
@@ -190,8 +187,8 @@
     <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260608-19"></script>
+  <script src="supabase-config.js?v=20260608-21"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260608-19"></script>
+  <script src="script.js?v=20260608-21"></script>
 </body>
 </html>
