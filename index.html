@@ -50,6 +50,11 @@
         </label>
 
         <label>
+          Conjunto
+          <input id="assembly" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
           Cadastrado por
           <select id="registeredBy" required>
             <option value="">Selecione</option>
@@ -70,7 +75,7 @@
 
       <div class="search-box">
         <label>
-          Pesquisar por nome, código, número do desenho ou aplicação
+          Pesquisar por nome, código, número do desenho, aplicação ou conjunto
           <input id="searchInput" type="search" autocomplete="off" placeholder="Digite para pesquisar">
         </label>
       </div>
@@ -122,6 +127,11 @@
         <label>
           Aplicação
           <input id="editApplication" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Conjunto
+          <input id="editAssembly" type="text" autocomplete="off" required>
         </label>
 
         <label>
@@ -180,8 +190,8 @@
     <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260608-18"></script>
+  <script src="supabase-config.js?v=20260608-19"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260608-18"></script>
+  <script src="script.js?v=20260608-19"></script>
 </body>
 </html>

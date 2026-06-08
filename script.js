@@ -68,6 +68,7 @@ function mapDatabasePart(part) {
     code: part.code,
     drawingNumber: part.drawing_number,
     application: part.application,
+    assembly: part.assembly || "",
     registeredBy: part.registered_by || "",
     createdAt: part.created_at || "",
     updatedAt: part.updated_at || part.created_at || ""
@@ -82,6 +83,7 @@ function mapSitePart(part) {
     code: part.code,
     drawing_number: part.drawingNumber,
     application: part.application,
+    assembly: part.assembly,
     registered_by: part.registeredBy,
     updated_at: new Date().toISOString()
   };
@@ -95,11 +97,11 @@ async function loadParts() {
 
   const { data, error } = await supabaseClient
     .from("parts")
-    .select("id, photo, name, code, drawing_number, application, registered_by, created_at, updated_at")
+    .select("id, photo, name, code, drawing_number, application, assembly, registered_by, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) {
-    results.innerHTML = '<p class="empty-state">Não foi possível carregar as peças.</p>';
+    results.innerHTML = '<p class="empty-state">Não foi possível carregar os itens.</p>';
     return;
   }
 
@@ -110,7 +112,7 @@ async function addPart(part) {
   await loadParts();
 
   if (partsCache.some((item) => normalizeText(item.code) === normalizeText(part.code))) {
-    throw new Error("A peça já está cadastrada no sistema.");
+    throw new Error("O item já está cadastrado no sistema.");
   }
 
   if (!supabaseClient) {
@@ -127,10 +129,10 @@ async function addPart(part) {
 
   if (error) {
     if (isDuplicatePartError(error)) {
-      throw new Error("A peça já está cadastrada no sistema.");
+      throw new Error("O item já está cadastrado no sistema.");
     }
 
-    throw new Error(error.message || "Não foi possível cadastrar a peça.");
+    throw new Error(error.message || "Não foi possível cadastrar o item.");
   }
 
   await loadParts();
@@ -140,7 +142,7 @@ async function updatePart(part, password) {
   await loadParts();
 
   if (partsCache.some((item) => item.id !== part.id && normalizeText(item.code) === normalizeText(part.code))) {
-    throw new Error("A peça já está cadastrada no sistema.");
+    throw new Error("O item já está cadastrado no sistema.");
   }
 
   if (!supabaseClient) {
@@ -162,15 +164,16 @@ async function updatePart(part, password) {
     code_input: part.code,
     drawing_number_input: part.drawingNumber,
     application_input: part.application,
+    assembly_input: part.assembly,
     registered_by_input: part.registeredBy
   });
 
   if (error) {
     if (isDuplicatePartError(error)) {
-      throw new Error("A peça já está cadastrada no sistema.");
+      throw new Error("O item já está cadastrado no sistema.");
     }
 
-    throw new Error(error.message || "Não foi possível atualizar a peça.");
+    throw new Error(error.message || "Não foi possível atualizar o item.");
   }
 
   await loadParts();
@@ -194,7 +197,7 @@ async function removePart(partId, password) {
   });
 
   if (error) {
-    throw new Error(error.message || "Não foi possível excluir a peça.");
+    throw new Error(error.message || "Não foi possível excluir o item.");
   }
 
   await loadParts();
@@ -251,6 +254,8 @@ function isDuplicatePartError(error) {
     code === "23505" ||
     message.includes("já está cadastrada") ||
     message.includes("ja esta cadastrada") ||
+    message.includes("já está cadastrado") ||
+    message.includes("ja esta cadastrado") ||
     message.includes("duplicate") ||
     message.includes("parts_code_unique")
   );
@@ -265,7 +270,8 @@ function partMatchesSearch(part, searchTerm) {
     part.name,
     part.code,
     part.drawingNumber,
-    part.application
+    part.application,
+    part.assembly
   ].some((field) => normalizeText(field).includes(searchTerm));
 }
 
@@ -281,9 +287,10 @@ function createPartCard(part) {
   const title = document.createElement("h3");
   title.textContent = part.name;
 
-  const code = createInfoLine("Código da peça:", part.code);
+  const code = createInfoLine("Código do item:", part.code);
   const drawingNumber = createInfoLine("Número do desenho:", part.drawingNumber);
   const application = createInfoLine("Aplicação:", part.application);
+  const assembly = createInfoLine("Conjunto:", part.assembly || "-");
   const registeredBy = createInfoLine("Cadastrado por:", part.registeredBy || "-");
   const createdAt = createInfoLine("Data de cadastro:", formatDateTime(part.createdAt));
   const updatedAt = createInfoLine("Última atualização:", formatDateTime(part.updatedAt));
@@ -291,8 +298,8 @@ function createPartCard(part) {
   const deleteButton = document.createElement("button");
   deleteButton.className = "icon-button delete-button";
   deleteButton.type = "button";
-  deleteButton.title = "Excluir peça";
-  deleteButton.setAttribute("aria-label", "Excluir peça");
+  deleteButton.title = "Excluir item";
+  deleteButton.setAttribute("aria-label", "Excluir item");
   deleteButton.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 6h18"></path>
@@ -307,8 +314,8 @@ function createPartCard(part) {
   const editButton = document.createElement("button");
   editButton.className = "icon-button edit-button";
   editButton.type = "button";
-  editButton.title = "Editar peça";
-  editButton.setAttribute("aria-label", "Editar peça");
+  editButton.title = "Editar item";
+  editButton.setAttribute("aria-label", "Editar item");
   editButton.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 20h9"></path>
@@ -321,7 +328,7 @@ function createPartCard(part) {
   actions.className = "card-actions";
   actions.append(editButton, deleteButton);
 
-  info.append(title, code, drawingNumber, application, registeredBy, createdAt, updatedAt, actions);
+  info.append(title, code, drawingNumber, application, assembly, registeredBy, createdAt, updatedAt, actions);
   card.append(media, info);
 
   return card;
@@ -337,7 +344,7 @@ function createPartMedia(part) {
 
   const image = document.createElement("img");
   image.src = part.photo;
-  image.alt = `Foto da peça ${part.name}`;
+  image.alt = `Foto do item ${part.name}`;
   image.title = "Clique para ampliar";
   image.addEventListener("click", () => openPhotoModal(part));
 
@@ -412,6 +419,7 @@ function fillEditModal(part) {
   document.querySelector("#editCode").value = part.code;
   document.querySelector("#editDrawingNumber").value = part.drawingNumber;
   document.querySelector("#editApplication").value = part.application;
+  document.querySelector("#editAssembly").value = part.assembly || "";
   document.querySelector("#editRegisteredBy").value = part.registeredBy || "";
   document.querySelector("#editPhoto").value = "";
 }
@@ -439,7 +447,7 @@ function openEditPart(partId) {
 
 function openPhotoModal(part) {
   expandedPhoto.src = part.photo;
-  expandedPhoto.alt = `Foto ampliada da peça ${part.name}`;
+  expandedPhoto.alt = `Foto ampliada do item ${part.name}`;
   photoModal.classList.add("active");
   photoModal.setAttribute("aria-hidden", "false");
   closePhotoModalButton.focus();
@@ -478,12 +486,12 @@ function renderResults() {
   results.innerHTML = "";
 
   if (parts.length === 0) {
-    results.innerHTML = '<p class="empty-state">Nenhuma peça cadastrada.</p>';
+    results.innerHTML = '<p class="empty-state">Nenhum item cadastrado.</p>';
     return;
   }
 
   if (filteredParts.length === 0) {
-    results.innerHTML = '<p class="empty-state">Nenhuma peça encontrada.</p>';
+    results.innerHTML = '<p class="empty-state">Nenhum item encontrado.</p>';
     return;
   }
 
@@ -496,7 +504,7 @@ function deletePart(partId) {
   partIdPendingDelete = partId;
   openConfirmModal({
     title: "Confirmar exclusão",
-    message: "Digite a senha para excluir esta peça.",
+    message: "Digite a senha para excluir este item.",
     actionLabel: "Excluir",
     actionClass: "delete-button",
     needsPassword: true
@@ -507,7 +515,7 @@ function requestEditPart(partId) {
   partIdPendingEdit = partId;
   openConfirmModal({
     title: "Confirmar edição",
-    message: "Digite a senha para editar esta peça.",
+    message: "Digite a senha para editar este item.",
     actionLabel: "Editar",
     actionClass: "primary-button",
     needsPassword: true
@@ -532,7 +540,7 @@ async function confirmDeletePart() {
   const password = deletePasswordInput.value.trim();
 
   if (!password) {
-    confirmMessage.textContent = "Digite a senha para excluir esta peça.";
+    confirmMessage.textContent = "Digite a senha para excluir este item.";
     deletePasswordInput.focus();
     return;
   }
@@ -555,7 +563,7 @@ function confirmEditPart() {
   const password = deletePasswordInput.value.trim();
 
   if (!password) {
-    confirmMessage.textContent = "Digite a senha para editar esta peça.";
+    confirmMessage.textContent = "Digite a senha para editar este item.";
     deletePasswordInput.focus();
     return;
   }
@@ -645,6 +653,7 @@ partForm.addEventListener("submit", async (event) => {
     code: normalizeInputValue(document.querySelector("#code").value),
     drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
     application: normalizeInputValue(document.querySelector("#application").value),
+    assembly: normalizeInputValue(document.querySelector("#assembly").value),
     registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value)
   };
 
@@ -656,7 +665,7 @@ partForm.addEventListener("submit", async (event) => {
     renderResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
-      showWarningToast("A peça já está cadastrada no sistema.");
+      showWarningToast("O item já está cadastrado no sistema.");
       return;
     }
 
@@ -684,6 +693,7 @@ editForm.addEventListener("submit", async (event) => {
     code: normalizeInputValue(document.querySelector("#editCode").value),
     drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
     application: normalizeInputValue(document.querySelector("#editApplication").value),
+    assembly: normalizeInputValue(document.querySelector("#editAssembly").value),
     registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
     createdAt: currentPart.createdAt
   };
@@ -694,7 +704,7 @@ editForm.addEventListener("submit", async (event) => {
     renderResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
-      showWarningToast("A peça já está cadastrada no sistema.");
+      showWarningToast("O item já está cadastrado no sistema.");
       return;
     }
 
