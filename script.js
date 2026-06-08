@@ -24,6 +24,8 @@ const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
 const cancelActionButton = document.querySelector("#cancelAction");
 const confirmActionButton = document.querySelector("#confirmAction");
+const deletePasswordLabel = document.querySelector("#deletePasswordLabel");
+const deletePasswordInput = document.querySelector("#deletePassword");
 const editModal = document.querySelector("#editModal");
 const editForm = document.querySelector("#editForm");
 const cancelEditModalButton = document.querySelector("#cancelEditModal");
@@ -38,6 +40,7 @@ let partIdBeingEdited = null;
 let successToastTimer = null;
 let deleteToastTimer = null;
 let partsCache = [];
+let confirmNeedsPassword = false;
 
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
@@ -135,18 +138,22 @@ async function updatePart(part) {
   await loadParts();
 }
 
-async function removePart(partId) {
+async function removePart(partId, password) {
   if (!supabaseClient) {
+    if (password !== "h28@nadir") {
+      throw new Error("Senha incorreta.");
+    }
+
     const parts = getLocalParts().filter((part) => part.id !== partId);
     saveLocalParts(parts);
     partsCache = parts;
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("parts")
-    .delete()
-    .eq("id", partId);
+  const { error } = await supabaseClient.rpc("delete_part_with_password", {
+    part_id_input: partId,
+    password_input: password
+  });
 
   if (error) {
     throw new Error("Não foi possível excluir a peça.");
@@ -356,14 +363,22 @@ function closePhotoModal() {
   expandedPhoto.alt = "";
 }
 
-function openConfirmModal({ title, message, actionLabel, actionClass }) {
+function openConfirmModal({ title, message, actionLabel, actionClass, needsPassword = false }) {
+  confirmNeedsPassword = needsPassword;
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmActionButton.textContent = actionLabel;
   confirmActionButton.className = actionClass;
+  deletePasswordInput.value = "";
+  deletePasswordLabel.classList.toggle("hidden", !needsPassword);
   confirmModal.classList.add("active");
   confirmModal.setAttribute("aria-hidden", "false");
-  cancelActionButton.focus();
+
+  if (needsPassword) {
+    deletePasswordInput.focus();
+  } else {
+    cancelActionButton.focus();
+  }
 }
 
 function renderResults() {
@@ -392,9 +407,10 @@ function deletePart(partId) {
   partIdPendingDelete = partId;
   openConfirmModal({
     title: "Confirmar exclusão",
-    message: "Tem certeza que deseja excluir esta peça?",
+    message: "Digite a senha para excluir esta peça.",
     actionLabel: "Excluir",
-    actionClass: "delete-button"
+    actionClass: "delete-button",
+    needsPassword: true
   });
 }
 
@@ -411,6 +427,9 @@ function requestEditPart(partId) {
 function closeConfirmModal() {
   partIdPendingDelete = null;
   partIdPendingEdit = null;
+  confirmNeedsPassword = false;
+  deletePasswordInput.value = "";
+  deletePasswordLabel.classList.add("hidden");
   confirmModal.classList.remove("active");
   confirmModal.setAttribute("aria-hidden", "true");
 }
@@ -420,8 +439,16 @@ async function confirmDeletePart() {
     return;
   }
 
+  const password = deletePasswordInput.value.trim();
+
+  if (!password) {
+    confirmMessage.textContent = "Digite a senha para excluir esta peça.";
+    deletePasswordInput.focus();
+    return;
+  }
+
   try {
-    await removePart(partIdPendingDelete);
+    await removePart(partIdPendingDelete, password);
     closeConfirmModal();
     showDeleteToast();
     renderResults();
@@ -459,6 +486,13 @@ searchInput.addEventListener("input", renderResults);
 cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
+
+deletePasswordInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && confirmNeedsPassword) {
+    event.preventDefault();
+    confirmPendingAction();
+  }
+});
 
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {

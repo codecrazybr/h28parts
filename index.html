@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>H28 Parts</title>
-  <link rel="stylesheet" href="style.css?v=20260607-4">
+  <link rel="stylesheet" href="style.css?v=20260607-6">
 </head>
 <body>
   <header class="topbar">
@@ -74,6 +74,10 @@
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
       <h2 id="confirmTitle">Confirmar ação</h2>
       <p id="confirmMessage">Tem certeza?</p>
+      <label id="deletePasswordLabel" class="password-field hidden">
+        Senha para excluir
+        <input id="deletePassword" type="password" autocomplete="off" placeholder="Digite a senha">
+      </label>
       <div class="modal-actions">
         <button id="cancelAction" class="secondary-button" type="button">Cancelar</button>
         <button id="confirmAction" class="delete-button" type="button">Confirmar</button>
@@ -148,8 +152,8 @@
     <p>Peça excluída com sucesso</p>
   </div>
 
-  <script src="supabase-config.js?v=20260607-4"></script>
+  <script src="supabase-config.js?v=20260607-6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260607-4"></script>
+  <script src="script.js?v=20260607-6"></script>
 </body>
 </html>

@@ -526,6 +526,10 @@ input:focus {
   color: var(--gray-800);
 }
 
+.password-field {
+  margin-top: 16px;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
