@@ -16,32 +16,32 @@
 
   <main class="container">
     <nav class="tabs" aria-label="Telas do sistema">
-      <button class="tab-button active" type="button" data-screen="registerScreen">Cadastrar Peça</button>
-      <button class="tab-button" type="button" data-screen="searchScreen">Consultar Peça</button>
+      <button class="tab-button active" type="button" data-screen="registerScreen">Cadastrar Item</button>
+      <button class="tab-button" type="button" data-screen="searchScreen">Consultar Item</button>
     </nav>
 
     <section id="registerScreen" class="screen active" aria-labelledby="registerTitle">
-      <h2 id="registerTitle">Cadastrar Peça</h2>
+      <h2 id="registerTitle">Cadastrar Item</h2>
 
       <form id="partForm" class="form">
         <label>
-          Foto da peça (opcional)
+          Foto do item (opcional)
           <input id="photo" type="file" accept="image/*">
         </label>
 
         <label>
-          Nome da peça
+          Nome do item
           <input id="name" type="text" autocomplete="off" required>
         </label>
 
         <label>
-          Código da peça
+          Código do item
           <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Número do desenho
-          <input id="drawingNumber" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
+          <input id="drawingNumber" type="text" autocomplete="off" required>
         </label>
 
         <label>
@@ -59,14 +59,14 @@
         </label>
 
         <div class="form-actions">
-          <button class="primary-button" type="submit">Salvar peça</button>
+          <button class="primary-button" type="submit">Salvar item</button>
         </div>
         <p id="formMessage" class="message" aria-live="polite"></p>
       </form>
     </section>
 
     <section id="searchScreen" class="screen" aria-labelledby="searchTitle">
-      <h2 id="searchTitle">Consultar Peça</h2>
+      <h2 id="searchTitle">Consultar Item</h2>
 
       <div class="search-box">
         <label>
@@ -96,7 +96,7 @@
 
   <div id="editModal" class="modal-overlay" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editTitle">
-      <h2 id="editTitle">Editar peça</h2>
+      <h2 id="editTitle">Editar item</h2>
 
       <form id="editForm" class="form">
         <label>
@@ -105,18 +105,18 @@
         </label>
 
         <label>
-          Nome da peça
+          Nome do item
           <input id="editName" type="text" autocomplete="off" required>
         </label>
 
         <label>
-          Código da peça
+          Código do item
           <input id="editCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Número do desenho
-          <input id="editDrawingNumber" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
+          <input id="editDrawingNumber" type="text" autocomplete="off" required>
         </label>
 
         <label>
@@ -142,7 +142,7 @@
   </div>
 
   <div id="photoModal" class="modal-overlay" aria-hidden="true">
-    <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Foto ampliada da peça">
+    <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Foto ampliada do item">
       <button id="closePhotoModal" class="photo-close-button" type="button" aria-label="Fechar foto ampliada">×</button>
       <img id="expandedPhoto" src="" alt="">
     </div>
@@ -154,7 +154,7 @@
         <path d="M14 27l8 8 17-18"></path>
       </svg>
     </div>
-    <p>Peça cadastrada com sucesso</p>
+    <p>Item cadastrado com sucesso</p>
   </div>
 
   <div id="deleteToast" class="delete-toast" aria-live="polite" aria-hidden="true">
@@ -167,7 +167,7 @@
         <path d="M28 24v10"></path>
       </svg>
     </div>
-    <p>Peça excluída com sucesso</p>
+    <p>Item excluído com sucesso</p>
   </div>
 
   <div id="warningToast" class="warning-toast" aria-live="polite" aria-hidden="true">
@@ -177,11 +177,11 @@
         <path d="M26 39h.01"></path>
       </svg>
     </div>
-    <p>A peça já está cadastrada no sistema</p>
+    <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260608-17"></script>
+  <script src="supabase-config.js?v=20260608-18"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260608-17"></script>
+  <script src="script.js?v=20260608-18"></script>
 </body>
 </html>
