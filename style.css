@@ -390,6 +390,93 @@ input:focus {
   box-shadow: 0 8px 18px rgba(47, 68, 147, 0.22);
 }
 
+.success-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 20;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(86vw, 320px);
+  padding: 24px;
+  border: 1px solid rgba(27, 135, 64, 0.22);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(15, 24, 61, 0.28);
+  color: #146c2e;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -44%) scale(0.92);
+}
+
+.success-toast.active {
+  animation: successPop 1.8s ease forwards;
+}
+
+.success-toast p {
+  margin: 0;
+  color: var(--blue-deep);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.success-check {
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #39c66a, #16843a);
+  box-shadow: 0 14px 28px rgba(22, 132, 58, 0.28);
+}
+
+.success-check svg {
+  width: 52px;
+  height: 52px;
+}
+
+.success-check path {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: drawCheck 0.45s ease 0.18s forwards;
+}
+
+@keyframes successPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -42%) scale(0.9);
+  }
+
+  16% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -54%) scale(0.96);
+  }
+}
+
+@keyframes drawCheck {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .modal-box h2 {
   margin-bottom: 10px;
   font-size: 20px;

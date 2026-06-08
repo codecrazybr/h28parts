@@ -1,4 +1,17 @@
 const storageKey = "h28Parts";
+const supabaseConfig = window.H28_SUPABASE_CONFIG || {};
+const supabaseUrl = supabaseConfig.url || "";
+const supabaseAnonKey = supabaseConfig.anonKey || "";
+const isSupabaseConfigured = (
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes("COLE_AQUI") &&
+  !supabaseAnonKey.includes("COLE_AQUI") &&
+  window.supabase
+);
+const supabaseClient = isSupabaseConfigured
+  ? window.supabase.createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 const tabButtons = document.querySelectorAll(".tab-button");
 const screens = document.querySelectorAll(".screen");
@@ -17,16 +30,124 @@ const cancelEditModalButton = document.querySelector("#cancelEditModal");
 const photoModal = document.querySelector("#photoModal");
 const expandedPhoto = document.querySelector("#expandedPhoto");
 const closePhotoModalButton = document.querySelector("#closePhotoModal");
+const successToast = document.querySelector("#successToast");
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
+let successToastTimer = null;
+let partsCache = [];
 
 function getParts() {
+  return partsCache;
+}
+
+function getLocalParts() {
   return JSON.parse(localStorage.getItem(storageKey)) || [];
 }
 
-function saveParts(parts) {
+function saveLocalParts(parts) {
   localStorage.setItem(storageKey, JSON.stringify(parts));
+}
+
+function mapDatabasePart(part) {
+  return {
+    id: part.id,
+    photo: part.photo,
+    name: part.name,
+    code: part.code,
+    drawingNumber: part.drawing_number,
+    application: part.application
+  };
+}
+
+function mapSitePart(part) {
+  return {
+    id: part.id,
+    photo: part.photo,
+    name: part.name,
+    code: part.code,
+    drawing_number: part.drawingNumber,
+    application: part.application
+  };
+}
+
+async function loadParts() {
+  if (!supabaseClient) {
+    partsCache = getLocalParts();
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("parts")
+    .select("id, photo, name, code, drawing_number, application, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    results.innerHTML = '<p class="empty-state">Não foi possível carregar as peças.</p>';
+    return;
+  }
+
+  partsCache = data.map(mapDatabasePart);
+}
+
+async function addPart(part) {
+  if (!supabaseClient) {
+    const parts = getLocalParts();
+    parts.push(part);
+    saveLocalParts(parts);
+    partsCache = parts;
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("parts")
+    .insert(mapSitePart(part));
+
+  if (error) {
+    throw new Error("Não foi possível cadastrar a peça.");
+  }
+
+  await loadParts();
+}
+
+async function updatePart(part) {
+  if (!supabaseClient) {
+    const parts = getLocalParts().map((item) => item.id === part.id ? part : item);
+    saveLocalParts(parts);
+    partsCache = parts;
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("parts")
+    .update(mapSitePart(part))
+    .eq("id", part.id);
+
+  if (error) {
+    throw new Error("Não foi possível atualizar a peça.");
+  }
+
+  await loadParts();
+}
+
+async function removePart(partId) {
+  if (!supabaseClient) {
+    const parts = getLocalParts().filter((part) => part.id !== partId);
+    saveLocalParts(parts);
+    partsCache = parts;
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("parts")
+    .delete()
+    .eq("id", partId);
+
+  if (error) {
+    throw new Error("Não foi possível excluir a peça.");
+  }
+
+  await loadParts();
 }
 
 function showScreen(screenId) {
@@ -143,6 +264,21 @@ function createPartId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function showSuccessToast() {
+  clearTimeout(successToastTimer);
+  successToast.classList.remove("active");
+  successToast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    successToast.classList.add("active");
+  });
+
+  successToastTimer = setTimeout(() => {
+    successToast.classList.remove("active");
+    successToast.setAttribute("aria-hidden", "true");
+  }, 1900);
+}
+
 function fillEditModal(part) {
   partIdBeingEdited = part.id;
   document.querySelector("#editName").value = part.name;
@@ -246,15 +382,18 @@ function closeConfirmModal() {
   confirmModal.setAttribute("aria-hidden", "true");
 }
 
-function confirmDeletePart() {
+async function confirmDeletePart() {
   if (!partIdPendingDelete) {
     return;
   }
 
-  const updatedParts = getParts().filter((part) => part.id !== partIdPendingDelete);
-  saveParts(updatedParts);
-  closeConfirmModal();
-  renderResults();
+  try {
+    await removePart(partIdPendingDelete);
+    closeConfirmModal();
+    renderResults();
+  } catch (error) {
+    confirmMessage.textContent = error.message;
+  }
 }
 
 function confirmEditPart() {
@@ -340,13 +479,15 @@ partForm.addEventListener("submit", async (event) => {
     application: document.querySelector("#application").value.trim()
   };
 
-  const parts = getParts();
-  parts.push(part);
-  saveParts(parts);
-  partForm.reset();
-  formMessage.textContent = "Peça cadastrada com sucesso.";
-
-  renderResults();
+  try {
+    await addPart(part);
+    partForm.reset();
+    formMessage.textContent = "";
+    showSuccessToast();
+    renderResults();
+  } catch (error) {
+    formMessage.textContent = error.message;
+  }
 });
 
 editForm.addEventListener("submit", async (event) => {
@@ -371,10 +512,20 @@ editForm.addEventListener("submit", async (event) => {
     application: document.querySelector("#editApplication").value.trim()
   };
 
-  const updatedParts = parts.map((part) => part.id === currentPart.id ? updatedPart : part);
-  saveParts(updatedParts);
-  closeEditModal();
-  renderResults();
+  try {
+    await updatePart(updatedPart);
+    closeEditModal();
+    renderResults();
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
-renderResults();
+loadParts().then(renderResults);
+
+if (supabaseClient) {
+  setInterval(async () => {
+    await loadParts();
+    renderResults();
+  }, 10000);
+}
