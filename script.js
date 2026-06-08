@@ -38,6 +38,7 @@ const warningToast = document.querySelector("#warningToast");
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
+let editPassword = "";
 let successToastTimer = null;
 let deleteToastTimer = null;
 let warningToastTimer = null;
@@ -135,7 +136,7 @@ async function addPart(part) {
   await loadParts();
 }
 
-async function updatePart(part) {
+async function updatePart(part, password) {
   await loadParts();
 
   if (partsCache.some((item) => item.id !== part.id && normalizeText(item.code) === normalizeText(part.code))) {
@@ -143,16 +144,26 @@ async function updatePart(part) {
   }
 
   if (!supabaseClient) {
+    if (password !== "1236") {
+      throw new Error("Senha incorreta.");
+    }
+
     const parts = getLocalParts().map((item) => item.id === part.id ? part : item);
     saveLocalParts(parts);
     partsCache = parts;
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("parts")
-    .update(mapSitePart(part))
-    .eq("id", part.id);
+  const { error } = await supabaseClient.rpc("update_part_with_password", {
+    part_id_input: part.id,
+    password_input: password,
+    photo_input: part.photo,
+    name_input: part.name,
+    code_input: part.code,
+    drawing_number_input: part.drawingNumber,
+    application_input: part.application,
+    registered_by_input: part.registeredBy
+  });
 
   if (error) {
     if (isDuplicatePartError(error)) {
@@ -407,6 +418,7 @@ function fillEditModal(part) {
 
 function closeEditModal() {
   partIdBeingEdited = null;
+  editPassword = "";
   editForm.reset();
   editModal.classList.remove("active");
   editModal.setAttribute("aria-hidden", "true");
@@ -495,9 +507,10 @@ function requestEditPart(partId) {
   partIdPendingEdit = partId;
   openConfirmModal({
     title: "Confirmar edição",
-    message: "Deseja editar esta peça?",
+    message: "Digite a senha para editar esta peça.",
     actionLabel: "Editar",
-    actionClass: "primary-button"
+    actionClass: "primary-button",
+    needsPassword: true
   });
 }
 
@@ -539,7 +552,22 @@ function confirmEditPart() {
     return;
   }
 
+  const password = deletePasswordInput.value.trim();
+
+  if (!password) {
+    confirmMessage.textContent = "Digite a senha para editar esta peça.";
+    deletePasswordInput.focus();
+    return;
+  }
+
+  if (password !== "1236") {
+    confirmMessage.textContent = "Senha incorreta.";
+    deletePasswordInput.focus();
+    return;
+  }
+
   const partId = partIdPendingEdit;
+  editPassword = password;
   closeConfirmModal();
   openEditPart(partId);
 }
@@ -661,7 +689,7 @@ editForm.addEventListener("submit", async (event) => {
   };
 
   try {
-    await updatePart(updatedPart);
+    await updatePart(updatedPart, editPassword);
     closeEditModal();
     renderResults();
   } catch (error) {
