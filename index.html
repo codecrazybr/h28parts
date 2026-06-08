@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260608-21">
+  <link rel="stylesheet" href="style.css?v=20260608-22">
 </head>
 <body>
   <header class="topbar">
@@ -164,6 +164,15 @@
     <p>Item cadastrado com sucesso</p>
   </div>
 
+  <div id="editToast" class="edit-toast" aria-live="polite" aria-hidden="true">
+    <div class="edit-check" aria-hidden="true">
+      <svg viewBox="0 0 52 52">
+        <path d="M14 27l8 8 17-18"></path>
+      </svg>
+    </div>
+    <p>Item editado com sucesso</p>
+  </div>
+
   <div id="deleteToast" class="delete-toast" aria-live="polite" aria-hidden="true">
     <div class="delete-check" aria-hidden="true">
       <svg viewBox="0 0 52 52">
@@ -187,8 +196,8 @@
     <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260608-21"></script>
+  <script src="supabase-config.js?v=20260608-23"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260608-21"></script>
+  <script src="script.js?v=20260608-23"></script>
 </body>
 </html>

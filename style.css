@@ -432,6 +432,7 @@ select:focus {
 }
 
 .success-toast,
+.edit-toast,
 .delete-toast,
 .warning-toast {
   position: fixed;
@@ -456,6 +457,11 @@ select:focus {
   color: #146c2e;
 }
 
+.edit-toast {
+  border: 1px solid rgba(47, 68, 147, 0.22);
+  color: var(--blue);
+}
+
 .delete-toast {
   border: 1px solid rgba(180, 35, 24, 0.22);
   color: var(--danger);
@@ -467,12 +473,14 @@ select:focus {
 }
 
 .success-toast.active,
+.edit-toast.active,
 .delete-toast.active,
 .warning-toast.active {
   animation: successPop 1.8s ease forwards;
 }
 
 .success-toast p,
+.edit-toast p,
 .delete-toast p,
 .warning-toast p {
   margin: 0;
@@ -484,6 +492,7 @@ select:focus {
 }
 
 .success-check,
+.edit-check,
 .delete-check,
 .warning-check {
   width: 76px;
@@ -498,6 +507,11 @@ select:focus {
   box-shadow: 0 14px 28px rgba(22, 132, 58, 0.28);
 }
 
+.edit-check {
+  background: linear-gradient(180deg, var(--blue-light), var(--blue));
+  box-shadow: 0 14px 28px rgba(47, 68, 147, 0.26);
+}
+
 .delete-check {
   background: linear-gradient(180deg, #df4438, var(--danger));
   box-shadow: 0 14px 28px rgba(180, 35, 24, 0.28);
@@ -509,6 +523,7 @@ select:focus {
 }
 
 .success-check svg,
+.edit-check svg,
 .delete-check svg,
 .warning-check svg {
   width: 52px;
@@ -516,6 +531,7 @@ select:focus {
 }
 
 .success-check path,
+.edit-check path,
 .delete-check path,
 .warning-check path {
   fill: none;

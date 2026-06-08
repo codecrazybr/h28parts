@@ -33,6 +33,7 @@ const photoModal = document.querySelector("#photoModal");
 const expandedPhoto = document.querySelector("#expandedPhoto");
 const closePhotoModalButton = document.querySelector("#closePhotoModal");
 const successToast = document.querySelector("#successToast");
+const editToast = document.querySelector("#editToast");
 const deleteToast = document.querySelector("#deleteToast");
 const warningToast = document.querySelector("#warningToast");
 let partIdPendingDelete = null;
@@ -40,6 +41,7 @@ let partIdPendingEdit = null;
 let partIdBeingEdited = null;
 let editPassword = "";
 let successToastTimer = null;
+let editToastTimer = null;
 let deleteToastTimer = null;
 let warningToastTimer = null;
 let partsCache = [];
@@ -109,8 +111,6 @@ async function loadParts() {
 }
 
 async function addPart(part) {
-  await loadParts();
-
   if (partsCache.some((item) => normalizeText(item.code) === normalizeText(part.code))) {
     throw new Error("O item já está cadastrado no sistema.");
   }
@@ -135,12 +135,10 @@ async function addPart(part) {
     throw new Error(error.message || "Não foi possível cadastrar o item.");
   }
 
-  await loadParts();
+  partsCache = [part, ...partsCache];
 }
 
 async function updatePart(part, password) {
-  await loadParts();
-
   if (partsCache.some((item) => item.id !== part.id && normalizeText(item.code) === normalizeText(part.code))) {
     throw new Error("O item já está cadastrado no sistema.");
   }
@@ -176,7 +174,10 @@ async function updatePart(part, password) {
     throw new Error(error.message || "Não foi possível atualizar o item.");
   }
 
-  await loadParts();
+  partsCache = partsCache.map((item) => item.id === part.id ? {
+    ...part,
+    updatedAt: new Date().toISOString()
+  } : item);
 }
 
 async function removePart(partId, password) {
@@ -221,7 +222,25 @@ function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onload = () => {
+        const maxSize = 1200;
+        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+
+      image.onerror = () => resolve(reader.result);
+      image.src = reader.result;
+    };
     reader.onerror = () => reject(new Error("Não foi possível carregar a foto."));
     reader.readAsDataURL(file);
   });
@@ -375,6 +394,21 @@ function showSuccessToast() {
   successToastTimer = setTimeout(() => {
     successToast.classList.remove("active");
     successToast.setAttribute("aria-hidden", "true");
+  }, 1900);
+}
+
+function showEditToast() {
+  clearTimeout(editToastTimer);
+  editToast.classList.remove("active");
+  editToast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    editToast.classList.add("active");
+  });
+
+  editToastTimer = setTimeout(() => {
+    editToast.classList.remove("active");
+    editToast.setAttribute("aria-hidden", "true");
   }, 1900);
 }
 
@@ -641,7 +675,10 @@ photoModal.addEventListener("click", (event) => {
 partForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  const submitButton = partForm.querySelector("button[type='submit']");
   const photoFile = document.querySelector("#photo").files[0];
+  submitButton.disabled = true;
+  submitButton.textContent = "Salvando...";
 
   const part = {
     id: createPartId(),
@@ -667,16 +704,24 @@ partForm.addEventListener("submit", async (event) => {
     }
 
     formMessage.textContent = error.message;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Salvar item";
   }
 });
 
 editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  const submitButton = editForm.querySelector("button[type='submit']");
   const parts = getParts();
   const currentPart = parts.find((part) => part.id === partIdBeingEdited);
+  submitButton.disabled = true;
+  submitButton.textContent = "Salvando...";
 
   if (!currentPart) {
+    submitButton.disabled = false;
+    submitButton.textContent = "Salvar edição";
     closeEditModal();
     renderResults();
     return;
@@ -698,6 +743,7 @@ editForm.addEventListener("submit", async (event) => {
   try {
     await updatePart(updatedPart, editPassword);
     closeEditModal();
+    showEditToast();
     renderResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
@@ -706,6 +752,9 @@ editForm.addEventListener("submit", async (event) => {
     }
 
     alert(error.message);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Salvar edição";
   }
 });
 
