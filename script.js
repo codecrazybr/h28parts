@@ -31,11 +31,16 @@ const photoModal = document.querySelector("#photoModal");
 const expandedPhoto = document.querySelector("#expandedPhoto");
 const closePhotoModalButton = document.querySelector("#closePhotoModal");
 const successToast = document.querySelector("#successToast");
+const deleteToast = document.querySelector("#deleteToast");
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
 let successToastTimer = null;
+let deleteToastTimer = null;
 let partsCache = [];
+
+document.querySelector("#photo").required = false;
+document.querySelector("#editPhoto").required = false;
 
 function getParts() {
   return partsCache;
@@ -195,11 +200,7 @@ function createPartCard(part) {
   const card = document.createElement("article");
   card.className = "part-card";
 
-  const image = document.createElement("img");
-  image.src = part.photo;
-  image.alt = `Foto da peça ${part.name}`;
-  image.title = "Clique para ampliar";
-  image.addEventListener("click", () => openPhotoModal(part));
+  const media = createPartMedia(part);
 
   const info = document.createElement("div");
   info.className = "part-info";
@@ -245,9 +246,26 @@ function createPartCard(part) {
   actions.append(editButton, deleteButton);
 
   info.append(title, code, drawingNumber, application, actions);
-  card.append(image, info);
+  card.append(media, info);
 
   return card;
+}
+
+function createPartMedia(part) {
+  if (!part.photo) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "part-photo-placeholder";
+    placeholder.textContent = "Sem foto";
+    return placeholder;
+  }
+
+  const image = document.createElement("img");
+  image.src = part.photo;
+  image.alt = `Foto da peça ${part.name}`;
+  image.title = "Clique para ampliar";
+  image.addEventListener("click", () => openPhotoModal(part));
+
+  return image;
 }
 
 function createInfoLine(label, value) {
@@ -276,6 +294,21 @@ function showSuccessToast() {
   successToastTimer = setTimeout(() => {
     successToast.classList.remove("active");
     successToast.setAttribute("aria-hidden", "true");
+  }, 1900);
+}
+
+function showDeleteToast() {
+  clearTimeout(deleteToastTimer);
+  deleteToast.classList.remove("active");
+  deleteToast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    deleteToast.classList.add("active");
+  });
+
+  deleteToastTimer = setTimeout(() => {
+    deleteToast.classList.remove("active");
+    deleteToast.setAttribute("aria-hidden", "true");
   }, 1900);
 }
 
@@ -390,6 +423,7 @@ async function confirmDeletePart() {
   try {
     await removePart(partIdPendingDelete);
     closeConfirmModal();
+    showDeleteToast();
     renderResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
@@ -465,14 +499,9 @@ partForm.addEventListener("submit", async (event) => {
 
   const photoFile = document.querySelector("#photo").files[0];
 
-  if (!photoFile) {
-    formMessage.textContent = "Selecione uma foto da peça.";
-    return;
-  }
-
   const part = {
     id: createPartId(),
-    photo: await fileToBase64(photoFile),
+    photo: photoFile ? await fileToBase64(photoFile) : "",
     name: document.querySelector("#name").value.trim(),
     code: document.querySelector("#code").value.trim(),
     drawingNumber: document.querySelector("#drawingNumber").value.trim(),

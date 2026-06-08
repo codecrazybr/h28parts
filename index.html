@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>H28 Parts</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260607-4">
 </head>
 <body>
   <header class="topbar">
@@ -25,7 +25,7 @@
 
       <form id="partForm" class="form">
         <label>
-          Foto da peça
+          Foto da peça (opcional)
           <input id="photo" type="file" accept="image/*">
         </label>
 
@@ -87,7 +87,7 @@
 
       <form id="editForm" class="form">
         <label>
-          Foto da peça
+          Foto da peça (opcional)
           <input id="editPhoto" type="file" accept="image/*">
         </label>
 
@@ -135,8 +135,21 @@
     <p>Peça cadastrada com sucesso</p>
   </div>
 
-  <script src="supabase-config.js"></script>
+  <div id="deleteToast" class="delete-toast" aria-live="polite" aria-hidden="true">
+    <div class="delete-check" aria-hidden="true">
+      <svg viewBox="0 0 52 52">
+        <path d="M15 17h22"></path>
+        <path d="M21 17v-4h10v4"></path>
+        <path d="M18 17l2 24h12l2-24"></path>
+        <path d="M24 24v10"></path>
+        <path d="M28 24v10"></path>
+      </svg>
+    </div>
+    <p>Peça excluída com sucesso</p>
+  </div>
+
+  <script src="supabase-config.js?v=20260607-4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=20260607-4"></script>
 </body>
 </html>

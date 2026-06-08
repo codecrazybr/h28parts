@@ -238,14 +238,27 @@ input:focus {
   box-shadow: 0 16px 34px rgba(47, 68, 147, 0.16);
 }
 
-.part-card img {
+.part-card img,
+.part-photo-placeholder {
   width: 150px;
   height: 120px;
-  object-fit: cover;
   border: 1px solid var(--gray-300);
   border-radius: 6px;
   background: var(--gray-100);
+}
+
+.part-card img {
+  object-fit: cover;
   cursor: zoom-in;
+}
+
+.part-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--gray-500);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 13px;
 }
 
 .part-info {
@@ -390,7 +403,8 @@ input:focus {
   box-shadow: 0 8px 18px rgba(47, 68, 147, 0.22);
 }
 
-.success-toast {
+.success-toast,
+.delete-toast {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -400,21 +414,31 @@ input:focus {
   gap: 12px;
   width: min(86vw, 320px);
   padding: 24px;
-  border: 1px solid rgba(27, 135, 64, 0.22);
   border-radius: 8px;
   background: var(--white);
   box-shadow: 0 24px 60px rgba(15, 24, 61, 0.28);
-  color: #146c2e;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -44%) scale(0.92);
 }
 
-.success-toast.active {
+.success-toast {
+  border: 1px solid rgba(27, 135, 64, 0.22);
+  color: #146c2e;
+}
+
+.delete-toast {
+  border: 1px solid rgba(180, 35, 24, 0.22);
+  color: var(--danger);
+}
+
+.success-toast.active,
+.delete-toast.active {
   animation: successPop 1.8s ease forwards;
 }
 
-.success-toast p {
+.success-toast p,
+.delete-toast p {
   margin: 0;
   color: var(--blue-deep);
   font-size: 16px;
@@ -423,30 +447,45 @@ input:focus {
   text-transform: uppercase;
 }
 
-.success-check {
+.success-check,
+.delete-check {
   width: 76px;
   height: 76px;
   display: grid;
   place-items: center;
   border-radius: 50%;
+}
+
+.success-check {
   background: linear-gradient(180deg, #39c66a, #16843a);
   box-shadow: 0 14px 28px rgba(22, 132, 58, 0.28);
 }
 
-.success-check svg {
+.delete-check {
+  background: linear-gradient(180deg, #df4438, var(--danger));
+  box-shadow: 0 14px 28px rgba(180, 35, 24, 0.28);
+}
+
+.success-check svg,
+.delete-check svg {
   width: 52px;
   height: 52px;
 }
 
-.success-check path {
+.success-check path,
+.delete-check path {
   fill: none;
   stroke: var(--white);
-  stroke-width: 6;
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
   animation: drawCheck 0.45s ease 0.18s forwards;
+}
+
+.success-check path {
+  stroke-width: 6;
 }
 
 @keyframes successPop {
@@ -578,7 +617,8 @@ input:focus {
     flex-direction: row;
   }
 
-  .part-card img {
+  .part-card img,
+  .part-photo-placeholder {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
