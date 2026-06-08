@@ -99,6 +99,10 @@ async function loadParts() {
 }
 
 async function addPart(part) {
+  if (partsCache.some((item) => normalizeText(item.code) === normalizeText(part.code))) {
+    throw new Error("A peça já está cadastrada no sistema.");
+  }
+
   if (!supabaseClient) {
     const parts = getLocalParts();
     parts.push(part);
@@ -112,6 +116,10 @@ async function addPart(part) {
     .insert(mapSitePart(part));
 
   if (error) {
+    if (error.code === "23505") {
+      throw new Error("A peça já está cadastrada no sistema.");
+    }
+
     throw new Error("Não foi possível cadastrar a peça.");
   }
 
@@ -119,6 +127,10 @@ async function addPart(part) {
 }
 
 async function updatePart(part) {
+  if (partsCache.some((item) => item.id !== part.id && normalizeText(item.code) === normalizeText(part.code))) {
+    throw new Error("A peça já está cadastrada no sistema.");
+  }
+
   if (!supabaseClient) {
     const parts = getLocalParts().map((item) => item.id === part.id ? part : item);
     saveLocalParts(parts);
@@ -132,6 +144,10 @@ async function updatePart(part) {
     .eq("id", part.id);
 
   if (error) {
+    if (error.code === "23505") {
+      throw new Error("A peça já está cadastrada no sistema.");
+    }
+
     throw new Error("Não foi possível atualizar a peça.");
   }
 
