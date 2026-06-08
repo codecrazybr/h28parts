@@ -157,7 +157,7 @@ async function updatePart(part, password) {
   const { error } = await supabaseClient.rpc("update_part_with_password", {
     part_id_input: part.id,
     password_input: password,
-    photo_input: part.photo,
+    photo_input: part.photoChanged ? part.photo : null,
     name_input: part.name,
     code_input: part.code,
     drawing_number_input: part.drawingNumber,
@@ -226,7 +226,7 @@ function fileToBase64(file) {
       const image = new Image();
 
       image.onload = () => {
-        const maxSize = 1200;
+        const maxSize = 700;
         const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -235,7 +235,7 @@ function fileToBase64(file) {
         canvas.height = Math.round(image.height * scale);
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
+        resolve(canvas.toDataURL("image/jpeg", 0.62));
       };
 
       image.onerror = () => resolve(reader.result);
@@ -728,9 +728,11 @@ editForm.addEventListener("submit", async (event) => {
   }
 
   const photoFile = document.querySelector("#editPhoto").files[0];
+  const hasNewPhoto = Boolean(photoFile);
   const updatedPart = {
     id: currentPart.id,
-    photo: photoFile ? await fileToBase64(photoFile) : currentPart.photo,
+    photo: hasNewPhoto ? await fileToBase64(photoFile) : currentPart.photo,
+    photoChanged: hasNewPhoto,
     name: normalizeInputValue(document.querySelector("#editName").value),
     code: normalizeInputValue(document.querySelector("#editCode").value),
     drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
@@ -759,10 +761,3 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 loadParts().then(renderResults);
-
-if (supabaseClient) {
-  setInterval(async () => {
-    await loadParts();
-    renderResults();
-  }, 10000);
-}
