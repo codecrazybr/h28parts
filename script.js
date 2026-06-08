@@ -226,16 +226,21 @@ function fileToBase64(file) {
       const image = new Image();
 
       image.onload = () => {
-        const maxSize = 700;
-        const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+        const maxWidth = 900;
+        const maxHeight = 700;
+        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
 
         canvas.width = Math.round(image.width * scale);
         canvas.height = Math.round(image.height * scale);
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.62));
+        resolve(canvas.toDataURL("image/jpeg", 0.74));
       };
 
       image.onerror = () => resolve(reader.result);
