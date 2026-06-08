@@ -66,7 +66,10 @@ function mapDatabasePart(part) {
     name: part.name,
     code: part.code,
     drawingNumber: part.drawing_number,
-    application: part.application
+    application: part.application,
+    registeredBy: part.registered_by || "",
+    createdAt: part.created_at || "",
+    updatedAt: part.updated_at || part.created_at || ""
   };
 }
 
@@ -77,7 +80,9 @@ function mapSitePart(part) {
     name: part.name,
     code: part.code,
     drawing_number: part.drawingNumber,
-    application: part.application
+    application: part.application,
+    registered_by: part.registeredBy,
+    updated_at: new Date().toISOString()
   };
 }
 
@@ -89,7 +94,7 @@ async function loadParts() {
 
   const { data, error } = await supabaseClient
     .from("parts")
-    .select("id, photo, name, code, drawing_number, application, created_at")
+    .select("id, photo, name, code, drawing_number, application, registered_by, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -162,7 +167,7 @@ async function updatePart(part) {
 
 async function removePart(partId, password) {
   if (!supabaseClient) {
-    if (password !== "h28@nadir") {
+    if (password !== "1236") {
       throw new Error("Senha incorreta.");
     }
 
@@ -212,6 +217,21 @@ function normalizeText(value) {
   return value.toLowerCase().trim();
 }
 
+function normalizeInputValue(value) {
+  return value.trim().toUpperCase();
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
 function isDuplicatePartError(error) {
   const message = normalizeText(error.message || "");
   const code = error.code || "";
@@ -253,6 +273,9 @@ function createPartCard(part) {
   const code = createInfoLine("Código da peça:", part.code);
   const drawingNumber = createInfoLine("Número do desenho:", part.drawingNumber);
   const application = createInfoLine("Aplicação:", part.application);
+  const registeredBy = createInfoLine("Cadastrado por:", part.registeredBy || "-");
+  const createdAt = createInfoLine("Data de cadastro:", formatDateTime(part.createdAt));
+  const updatedAt = createInfoLine("Última atualização:", formatDateTime(part.updatedAt));
 
   const deleteButton = document.createElement("button");
   deleteButton.className = "icon-button delete-button";
@@ -287,7 +310,7 @@ function createPartCard(part) {
   actions.className = "card-actions";
   actions.append(editButton, deleteButton);
 
-  info.append(title, code, drawingNumber, application, actions);
+  info.append(title, code, drawingNumber, application, registeredBy, createdAt, updatedAt, actions);
   card.append(media, info);
 
   return card;
@@ -378,6 +401,7 @@ function fillEditModal(part) {
   document.querySelector("#editCode").value = part.code;
   document.querySelector("#editDrawingNumber").value = part.drawingNumber;
   document.querySelector("#editApplication").value = part.application;
+  document.querySelector("#editRegisteredBy").value = part.registeredBy || "";
   document.querySelector("#editPhoto").value = "";
 }
 
@@ -589,10 +613,11 @@ partForm.addEventListener("submit", async (event) => {
   const part = {
     id: createPartId(),
     photo: photoFile ? await fileToBase64(photoFile) : "",
-    name: document.querySelector("#name").value.trim(),
-    code: document.querySelector("#code").value.trim(),
-    drawingNumber: document.querySelector("#drawingNumber").value.trim(),
-    application: document.querySelector("#application").value.trim()
+    name: normalizeInputValue(document.querySelector("#name").value),
+    code: normalizeInputValue(document.querySelector("#code").value),
+    drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
+    application: normalizeInputValue(document.querySelector("#application").value),
+    registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value)
   };
 
   try {
@@ -627,10 +652,12 @@ editForm.addEventListener("submit", async (event) => {
   const updatedPart = {
     id: currentPart.id,
     photo: photoFile ? await fileToBase64(photoFile) : currentPart.photo,
-    name: document.querySelector("#editName").value.trim(),
-    code: document.querySelector("#editCode").value.trim(),
-    drawingNumber: document.querySelector("#editDrawingNumber").value.trim(),
-    application: document.querySelector("#editApplication").value.trim()
+    name: normalizeInputValue(document.querySelector("#editName").value),
+    code: normalizeInputValue(document.querySelector("#editCode").value),
+    drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
+    application: normalizeInputValue(document.querySelector("#editApplication").value),
+    registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
+    createdAt: currentPart.createdAt
   };
 
   try {

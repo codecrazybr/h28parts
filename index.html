@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>H28 Parts</title>
-  <link rel="stylesheet" href="style.css?v=20260607-11">
+  <link rel="stylesheet" href="style.css?v=20260607-12">
 </head>
 <body>
   <header class="topbar">
@@ -36,17 +36,22 @@
 
         <label>
           Código da peça
-          <input id="code" type="text" autocomplete="off" required>
+          <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Número do desenho
-          <input id="drawingNumber" type="text" autocomplete="off" required>
+          <input id="drawingNumber" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Aplicação
           <input id="application" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Cadastrado por
+          <input id="registeredBy" type="text" autocomplete="off" required>
         </label>
 
         <div class="form-actions">
@@ -76,7 +81,7 @@
       <p id="confirmMessage">Tem certeza?</p>
       <label id="deletePasswordLabel" class="password-field hidden">
         Senha para excluir
-        <input id="deletePassword" type="password" autocomplete="off" placeholder="Digite a senha">
+        <input id="deletePassword" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Digite a senha">
       </label>
       <div class="modal-actions">
         <button id="cancelAction" class="secondary-button" type="button">Cancelar</button>
@@ -102,17 +107,22 @@
 
         <label>
           Código da peça
-          <input id="editCode" type="text" autocomplete="off" required>
+          <input id="editCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Número do desenho
-          <input id="editDrawingNumber" type="text" autocomplete="off" required>
+          <input id="editDrawingNumber" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
           Aplicação
           <input id="editApplication" type="text" autocomplete="off" required>
+        </label>
+
+        <label>
+          Cadastrado por
+          <input id="editRegisteredBy" type="text" autocomplete="off" required>
         </label>
 
         <div class="modal-actions">
@@ -162,8 +172,8 @@
     <p>A peça já está cadastrada no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260607-11"></script>
+  <script src="supabase-config.js?v=20260607-13"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260607-11"></script>
+  <script src="script.js?v=20260607-13"></script>
 </body>
 </html>

@@ -163,6 +163,7 @@ input {
   font-family: inherit;
   background: linear-gradient(180deg, #ffffff, #fbfcfe);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  text-transform: uppercase;
 }
 
 input:focus {
