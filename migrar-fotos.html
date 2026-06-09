@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H28 - Migração de Fotos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20260609-storage-2">
+  <style>
+    .migration-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .migration-status {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border: 1px solid var(--steel);
+      border-radius: 8px;
+      background: var(--gray-50);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: var(--gray-300);
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--orange));
+      transition: width 0.2s ease;
+    }
+
+    .log-box {
+      min-height: 150px;
+      max-height: 300px;
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--steel);
+      border-radius: 8px;
+      background: #0f1d36;
+      color: #ffffff;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      text-transform: none;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container header-content">
+      <img class="brand-logo" src="nadir-logo.png" alt="Nadir">
+      <div class="header-title" aria-label="H28 - Migração de Fotos">
+        <span class="header-title-main">H28</span>
+        <span class="header-title-divider"></span>
+        <span class="header-title-sub">Migração de Fotos</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="screen active">
+      <h2>Migrar fotos para link</h2>
+
+      <div class="migration-panel">
+        <p class="message">
+          Esta ferramenta pega fotos antigas em Base64, envia para o Supabase Storage e salva apenas o link no item.
+        </p>
+
+        <label>
+          Senha
+          <input id="migrationPassword" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Digite a senha">
+        </label>
+
+        <div class="form-actions">
+          <button id="checkButton" class="secondary-button" type="button">Verificar fotos</button>
+          <button id="startButton" class="primary-button" type="button">Iniciar migração</button>
+          <button id="stopButton" class="delete-button" type="button" disabled>Parar</button>
+        </div>
+
+        <div class="migration-status">
+          <p id="statsText" class="message">Aguardando verificação.</p>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+        </div>
+
+        <div id="logBox" class="log-box" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="supabase-config.js?v=20260609-storage-2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="migrar-fotos.js?v=20260609-storage-2"></script>
+</body>
+</html>
