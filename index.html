@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260608-29">
+  <link rel="stylesheet" href="style.css?v=20260608-30">
 </head>
 <body>
   <header class="topbar">
@@ -42,17 +42,17 @@
         </label>
 
         <label>
-          CÃ³digo do item
+          Código do item
           <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
-          NÃºmero do desenho
+          Número do desenho
           <input id="drawingNumber" type="text" autocomplete="off" required>
         </label>
 
         <label>
-          AplicaÃ§Ã£o
+          Aplicação
           <input id="application" type="text" autocomplete="off" required>
         </label>
 
@@ -68,7 +68,7 @@
 
       <div class="search-box">
         <label>
-          Pesquisar por nome, cÃ³digo, nÃºmero do desenho ou aplicaÃ§Ã£o
+          Pesquisar por nome, código, número do desenho ou aplicação
           <input id="searchInput" type="search" autocomplete="off" placeholder="Digite para pesquisar">
         </label>
       </div>
@@ -79,7 +79,7 @@
 
   <div id="confirmModal" class="modal-overlay" aria-hidden="true">
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-      <h2 id="confirmTitle">Confirmar aÃ§Ã£o</h2>
+      <h2 id="confirmTitle">Confirmar ação</h2>
       <p id="confirmMessage">Tem certeza?</p>
       <label id="deletePasswordLabel" class="password-field hidden">
         Senha
@@ -98,7 +98,7 @@
 
       <form id="editForm" class="form">
         <label>
-          Nova foto (opcional - se nÃ£o escolher, mantÃ©m a atual)
+          Nova foto (opcional - se não escolher, mantém a atual)
           <input id="editPhoto" type="file" accept="image/*">
         </label>
 
@@ -108,23 +108,23 @@
         </label>
 
         <label>
-          CÃ³digo do item
+          Código do item
           <input id="editCode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required>
         </label>
 
         <label>
-          NÃºmero do desenho
+          Número do desenho
           <input id="editDrawingNumber" type="text" autocomplete="off" required>
         </label>
 
         <label>
-          AplicaÃ§Ã£o
+          Aplicação
           <input id="editApplication" type="text" autocomplete="off" required>
         </label>
 
         <div class="modal-actions">
           <button id="cancelEditModal" class="secondary-button" type="button">Cancelar</button>
-          <button class="primary-button" type="submit">Salvar ediÃ§Ã£o</button>
+          <button class="primary-button" type="submit">Salvar edição</button>
         </div>
       </form>
     </div>
@@ -132,7 +132,7 @@
 
   <div id="photoModal" class="modal-overlay" aria-hidden="true">
     <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Foto ampliada do item">
-      <button id="closePhotoModal" class="photo-close-button" type="button" aria-label="Fechar foto ampliada">Ã—</button>
+      <button id="closePhotoModal" class="photo-close-button" type="button" aria-label="Fechar foto ampliada">×</button>
       <img id="expandedPhoto" src="" alt="">
     </div>
   </div>
@@ -161,7 +161,7 @@
         <path d="M28 24v10"></path>
       </svg>
     </div>
-    <p>Item excluÃ­do com sucesso</p>
+    <p>Item excluído com sucesso</p>
   </div>
 
   <div id="warningToast" class="warning-toast" aria-live="polite" aria-hidden="true">
@@ -171,12 +171,11 @@
         <path d="M26 39h.01"></path>
       </svg>
     </div>
-    <p>O item jÃ¡ estÃ¡ cadastrado no sistema</p>
+    <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260608-29"></script>
+  <script src="supabase-config.js?v=20260608-30"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260608-29"></script>
+  <script src="script.js?v=20260608-30"></script>
 </body>
 </html>
-
