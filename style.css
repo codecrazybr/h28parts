@@ -210,6 +210,21 @@ select:focus {
   margin-bottom: 20px;
 }
 
+.items-counter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: -8px 0 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--steel);
+  border-left: 4px solid var(--orange);
+  border-radius: 6px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-weight: 800;
+  font-size: 13px;
+}
+
 .results {
   display: grid;
   gap: 14px;
@@ -261,7 +276,10 @@ select:focus {
   place-items: center;
   color: var(--gray-500);
   font-weight: 800;
-  font-size: 11px;
+  font-size: 9px;
+  line-height: 1.05;
+  text-align: center;
+  padding: 3px;
 }
 
 .part-photo-load-button {

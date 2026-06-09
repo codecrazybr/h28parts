@@ -20,6 +20,7 @@ const partForm = document.querySelector("#partForm");
 const formMessage = document.querySelector("#formMessage");
 const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
+const itemsCounter = document.querySelector("#itemsCounter");
 const confirmModal = document.querySelector("#confirmModal");
 const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
@@ -136,6 +137,35 @@ async function loadParts(searchValue = "") {
   }
 
   partsCache = data.map(mapDatabasePart);
+}
+
+async function loadItemsCount() {
+  if (!itemsCounter) {
+    return;
+  }
+
+  if (!supabaseClient) {
+    const total = getLocalParts().length;
+    itemsCounter.textContent = `Itens cadastrados: ${total}`;
+    return;
+  }
+
+  try {
+    const { count, error } = await withTimeout(
+      supabaseClient
+        .from("parts")
+        .select("id", { count: "exact", head: true }),
+      "Não foi possível carregar a quantidade de itens."
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    itemsCounter.textContent = `Itens cadastrados: ${count || 0}`;
+  } catch (error) {
+    itemsCounter.textContent = "Itens cadastrados: indisponível";
+  }
 }
 
 function isStorageUrl(value) {
@@ -693,6 +723,7 @@ async function confirmDeletePart() {
     await removePart(partIdPendingDelete, password);
     closeConfirmModal();
     showDeleteToast();
+    loadItemsCount();
     refreshResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
@@ -813,6 +844,7 @@ partForm.addEventListener("submit", async (event) => {
     await addPart(part);
     partForm.reset();
     showSuccessToast();
+    loadItemsCount();
     refreshResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
@@ -879,3 +911,4 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 renderResults();
+loadItemsCount();
