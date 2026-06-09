@@ -244,6 +244,41 @@ select:focus {
   background: var(--white);
 }
 
+.usage-button,
+.usage-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.usage-button {
+  border: 0;
+  background: var(--blue);
+  color: var(--white);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.usage-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(47, 68, 147, 0.22);
+}
+
+.usage-status {
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  border: 1px solid var(--steel);
+  border-left: 4px solid var(--orange);
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.35;
+}
+
 .results {
   display: grid;
   gap: 14px;

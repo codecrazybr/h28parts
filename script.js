@@ -22,6 +22,8 @@ const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
 const clockStatus = document.querySelector("#clockStatus");
+const usageButton = document.querySelector("#usageButton");
+const usageStatus = document.querySelector("#usageStatus");
 const confirmModal = document.querySelector("#confirmModal");
 const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
@@ -215,6 +217,53 @@ async function loadClockStatus() {
     clockStatus.textContent = `Relógio: ativo | Última atividade: ${formatClockDate(data[0].created_at)}`;
   } catch (error) {
     clockStatus.textContent = "Relógio: sem permissão de visualização";
+  }
+}
+
+async function loadUsageStatus() {
+  if (!usageStatus || !usageButton) {
+    return;
+  }
+
+  if (!supabaseUrl) {
+    usageStatus.textContent = "Uso: Supabase não configurado";
+    return;
+  }
+
+  usageButton.disabled = true;
+  usageButton.textContent = "Atualizando...";
+  usageStatus.textContent = "Uso: atualizando dados...";
+
+  try {
+    const response = await withTimeout(
+      fetch(`${supabaseUrl}/functions/v1/h28-usage`, {
+        method: "GET",
+        headers: {
+          apikey: supabaseAnonKey,
+          authorization: `Bearer ${supabaseAnonKey}`
+        }
+      }),
+      "Não foi possível carregar o uso."
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Não foi possível carregar o uso.");
+    }
+
+    const lastClock = data.lastClockAt ? formatClockDate(data.lastClockAt) : "aguardando";
+    usageStatus.textContent = [
+      `Itens: ${data.totalItems}`,
+      `Fotos antigas: ${data.base64Photos} (${data.base64Mb} MB)`,
+      `Storage: ${data.storageFiles} arquivos (${data.storageMb} MB)`,
+      `Relógio: ${lastClock}`
+    ].join(" | ");
+  } catch (error) {
+    usageStatus.textContent = `Uso: ${error.message}`;
+  } finally {
+    usageButton.disabled = false;
+    usageButton.textContent = "Atualizar uso";
   }
 }
 
@@ -825,6 +874,7 @@ cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
 closePhotoModalButton.addEventListener("click", closePhotoModal);
+usageButton?.addEventListener("click", loadUsageStatus);
 
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
@@ -963,3 +1013,4 @@ editForm.addEventListener("submit", async (event) => {
 renderResults();
 loadItemsCount();
 loadClockStatus();
+loadUsageStatus();
