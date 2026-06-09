@@ -47,6 +47,8 @@ let deleteToastTimer = null;
 let warningToastTimer = null;
 let partsCache = [];
 let confirmNeedsPassword = false;
+let searchTimer = null;
+let lastSearchToken = 0;
 
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
@@ -100,23 +102,47 @@ function mapSitePart(part) {
   };
 }
 
-async function loadParts() {
-  if (!supabaseClient) {
-    partsCache = getLocalParts();
+async function loadParts(searchValue = "") {
+  const searchTerm = normalizeText(searchValue);
+
+  if (!searchTerm) {
+    partsCache = [];
     return;
   }
 
+  if (!supabaseClient) {
+    partsCache = getLocalParts()
+      .filter((part) => partMatchesSearch(part, searchTerm))
+      .slice(0, 50);
+    return;
+  }
+
+  const searchText = normalizeInputValue(searchValue);
+  const safeSearchTerm = searchText.replace(/[%,()]/g, " ").trim();
+  let query = supabaseClient
+    .from("parts")
+    .select("id, name, code, drawing_number, application")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (safeSearchTerm) {
+    const searchFilter = [
+      `name.ilike.%${safeSearchTerm}%`,
+      `code.ilike.%${safeSearchTerm}%`,
+      `drawing_number.ilike.%${safeSearchTerm}%`,
+      `application.ilike.%${safeSearchTerm}%`
+    ].join(",");
+
+    query = query.or(searchFilter);
+  }
+
   const { data, error } = await withTimeout(
-    supabaseClient
-      .from("parts")
-      .select("id, name, code, drawing_number, application, registered_by, created_at, updated_at")
-      .order("created_at", { ascending: false }),
+    query,
     "Não foi possível carregar os itens. Verifique sua internet."
   );
 
   if (error) {
-    results.innerHTML = `<p class="empty-state">${error.message}</p>`;
-    return;
+    throw new Error(error.message || "Não foi possível carregar os itens.");
   }
 
   partsCache = data.map(mapDatabasePart);
@@ -389,9 +415,6 @@ function createPartCard(part) {
   const code = createInfoLine("Código do item:", part.code);
   const drawingNumber = createInfoLine("Número do desenho:", part.drawingNumber);
   const application = createInfoLine("Aplicação:", part.application);
-  const registeredBy = createInfoLine("Cadastrado por:", part.registeredBy || "-");
-  const createdAt = createInfoLine("Data de cadastro:", formatDateTime(part.createdAt));
-  const updatedAt = createInfoLine("Última atualização:", formatDateTime(part.updatedAt));
 
   const deleteButton = document.createElement("button");
   deleteButton.className = "icon-button delete-button";
@@ -426,7 +449,7 @@ function createPartCard(part) {
   actions.className = "card-actions";
   actions.append(editButton, deleteButton);
 
-  info.append(title, code, drawingNumber, application, registeredBy, createdAt, updatedAt, actions);
+  info.append(title, code, drawingNumber, application, actions);
   card.append(media, info);
 
   return card;
@@ -535,7 +558,6 @@ function fillEditModal(part) {
   document.querySelector("#editCode").value = part.code;
   document.querySelector("#editDrawingNumber").value = part.drawingNumber;
   document.querySelector("#editApplication").value = part.application;
-  document.querySelector("#editRegisteredBy").value = part.registeredBy || "";
   document.querySelector("#editPhoto").value = "";
 }
 
@@ -595,13 +617,14 @@ function openConfirmModal({ title, message, actionLabel, actionClass, needsPassw
 
 function renderResults() {
   const parts = getParts();
-  const searchTerm = normalizeText(searchInput.value);
-  const filteredParts = parts.filter((part) => partMatchesSearch(part, searchTerm));
+  const filteredParts = parts;
 
   results.innerHTML = "";
 
   if (parts.length === 0) {
-    results.innerHTML = '<p class="empty-state">Nenhum item cadastrado.</p>';
+    results.innerHTML = searchInput.value.trim()
+      ? '<p class="empty-state">Nenhum item encontrado.</p>'
+      : '<p class="empty-state">Digite uma pesquisa para consultar os itens.</p>';
     return;
   }
 
@@ -613,6 +636,35 @@ function renderResults() {
   filteredParts.forEach((part) => {
     results.appendChild(createPartCard(part));
   });
+}
+
+async function refreshResults({ loading = false } = {}) {
+  const token = ++lastSearchToken;
+
+  if (loading) {
+    results.innerHTML = '<p class="empty-state">Carregando itens...</p>';
+  }
+
+  try {
+    await loadParts(searchInput.value);
+
+    if (token !== lastSearchToken) {
+      return;
+    }
+
+    renderResults();
+  } catch (error) {
+    if (token === lastSearchToken) {
+      results.innerHTML = `<p class="empty-state">${error.message}</p>`;
+    }
+  }
+}
+
+function scheduleRefreshResults() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    refreshResults({ loading: true });
+  }, 350);
 }
 
 function deletePart(partId) {
@@ -664,7 +716,7 @@ async function confirmDeletePart() {
     await removePart(partIdPendingDelete, password);
     closeConfirmModal();
     showDeleteToast();
-    renderResults();
+    refreshResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
   }
@@ -710,7 +762,7 @@ tabButtons.forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screen));
 });
 
-searchInput.addEventListener("input", renderResults);
+searchInput.addEventListener("input", scheduleRefreshResults);
 cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
@@ -774,7 +826,7 @@ partForm.addEventListener("submit", async (event) => {
       code: normalizeInputValue(document.querySelector("#code").value),
       drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
       application: normalizeInputValue(document.querySelector("#application").value),
-      registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value),
+      registeredBy: "NAO INFORMADO",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -782,7 +834,7 @@ partForm.addEventListener("submit", async (event) => {
     await addPart(part);
     partForm.reset();
     showSuccessToast();
-    renderResults();
+    refreshResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
       showWarningToast("O item já está cadastrado no sistema.");
@@ -825,14 +877,14 @@ editForm.addEventListener("submit", async (event) => {
       code: normalizeInputValue(document.querySelector("#editCode").value),
       drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
       application: normalizeInputValue(document.querySelector("#editApplication").value),
-      registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
+      registeredBy: currentPart.registeredBy || "NAO INFORMADO",
       createdAt: currentPart.createdAt
     };
 
     await updatePart(updatedPart, editPassword);
     closeEditModal();
     showEditToast();
-    renderResults();
+    refreshResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
       showWarningToast("O item já está cadastrado no sistema.");
@@ -846,4 +898,4 @@ editForm.addEventListener("submit", async (event) => {
   }
 });
 
-loadParts().then(renderResults);
+refreshResults({ loading: true });
