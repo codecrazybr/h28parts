@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260609-storage-3">
+  <link rel="stylesheet" href="style.css?v=20260609-storage-5">
 </head>
 <body>
   <header class="topbar">
@@ -61,12 +61,15 @@
         </div>
         <p id="formMessage" class="message" aria-live="polite"></p>
       </form>
+
+      <footer class="system-status footer-status">
+        <div class="items-counter" id="itemsCounter">Itens cadastrados: carregando...</div>
+        <div class="clock-status" id="clockStatus">Relógio: verificando...</div>
+      </footer>
     </section>
 
     <section id="searchScreen" class="screen" aria-labelledby="searchTitle">
       <h2 id="searchTitle">Consultar Item</h2>
-
-      <div class="items-counter" id="itemsCounter">Itens cadastrados: carregando...</div>
 
       <div class="search-box">
         <label>
@@ -176,8 +179,8 @@
     <p>O item já está cadastrado no sistema</p>
   </div>
 
-  <script src="supabase-config.js?v=20260609-storage-3"></script>
+  <script src="supabase-config.js?v=20260609-storage-5"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260609-storage-3"></script>
+  <script src="script.js?v=20260609-storage-5"></script>
 </body>
 </html>

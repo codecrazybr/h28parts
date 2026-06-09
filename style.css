@@ -210,11 +210,25 @@ select:focus {
   margin-bottom: 20px;
 }
 
-.items-counter {
+.system-status {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  flex-wrap: wrap;
+  margin: -8px 0 16px;
+}
+
+.footer-status {
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--steel);
+}
+
+.items-counter,
+.clock-status {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  margin: -8px 0 16px;
   padding: 8px 12px;
   border: 1px solid var(--steel);
   border-left: 4px solid var(--orange);
@@ -223,6 +237,11 @@ select:focus {
   color: var(--blue-dark);
   font-weight: 800;
   font-size: 13px;
+}
+
+.clock-status {
+  border-left-color: var(--blue);
+  background: var(--white);
 }
 
 .results {

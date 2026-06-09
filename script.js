@@ -21,6 +21,7 @@ const formMessage = document.querySelector("#formMessage");
 const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
+const clockStatus = document.querySelector("#clockStatus");
 const confirmModal = document.querySelector("#confirmModal");
 const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
@@ -165,6 +166,55 @@ async function loadItemsCount() {
     itemsCounter.textContent = `Itens cadastrados: ${count || 0}`;
   } catch (error) {
     itemsCounter.textContent = "Itens cadastrados: indisponível";
+  }
+}
+
+function formatClockDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
+async function loadClockStatus() {
+  if (!clockStatus) {
+    return;
+  }
+
+  if (!supabaseClient) {
+    clockStatus.textContent = "Relógio: indisponível localmente";
+    return;
+  }
+
+  try {
+    const { data, error } = await withTimeout(
+      supabaseClient
+        .from("h28_maintenance_log")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1),
+      "Não foi possível verificar o relógio."
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      clockStatus.textContent = "Relógio: ativo, aguardando primeira execução";
+      return;
+    }
+
+    clockStatus.textContent = `Relógio: ativo | Última atividade: ${formatClockDate(data[0].created_at)}`;
+  } catch (error) {
+    clockStatus.textContent = "Relógio: sem permissão de visualização";
   }
 }
 
@@ -912,3 +962,4 @@ editForm.addEventListener("submit", async (event) => {
 
 renderResults();
 loadItemsCount();
+loadClockStatus();
