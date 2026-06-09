@@ -36,6 +36,7 @@ const successToast = document.querySelector("#successToast");
 const editToast = document.querySelector("#editToast");
 const deleteToast = document.querySelector("#deleteToast");
 const warningToast = document.querySelector("#warningToast");
+
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
@@ -49,6 +50,15 @@ let confirmNeedsPassword = false;
 
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
+
+function withTimeout(promise, message = "A conexão demorou demais. Tente novamente.") {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), 15000);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
 
 function getParts() {
   return partsCache;
@@ -65,12 +75,11 @@ function saveLocalParts(parts) {
 function mapDatabasePart(part) {
   return {
     id: part.id,
-    photo: part.photo,
+    photo: part.photo || "",
     name: part.name,
     code: part.code,
     drawingNumber: part.drawing_number,
     application: part.application,
-    assembly: part.assembly || "",
     registeredBy: part.registered_by || "",
     createdAt: part.created_at || "",
     updatedAt: part.updated_at || part.created_at || ""
@@ -80,12 +89,11 @@ function mapDatabasePart(part) {
 function mapSitePart(part) {
   return {
     id: part.id,
-    photo: part.photo,
+    photo: part.photo || "",
     name: part.name,
     code: part.code,
     drawing_number: part.drawingNumber,
     application: part.application,
-    assembly: part.assembly,
     registered_by: part.registeredBy,
     updated_at: new Date().toISOString()
   };
@@ -97,13 +105,16 @@ async function loadParts() {
     return;
   }
 
-  const { data, error } = await supabaseClient
-    .from("parts")
-    .select("id, photo, name, code, drawing_number, application, assembly, registered_by, created_at, updated_at")
-    .order("created_at", { ascending: false });
+  const { data, error } = await withTimeout(
+    supabaseClient
+      .from("parts")
+      .select("id, photo, name, code, drawing_number, application, registered_by, created_at, updated_at")
+      .order("created_at", { ascending: false }),
+    "Não foi possível carregar os itens. Verifique sua internet."
+  );
 
   if (error) {
-    results.innerHTML = '<p class="empty-state">Não foi possível carregar os itens.</p>';
+    results.innerHTML = `<p class="empty-state">${error.message}</p>`;
     return;
   }
 
@@ -119,13 +130,14 @@ async function addPart(part) {
     const parts = getLocalParts();
     parts.push(part);
     saveLocalParts(parts);
-    partsCache = parts;
+    partsCache = [part, ...partsCache];
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("parts")
-    .insert(mapSitePart(part));
+  const { error } = await withTimeout(
+    supabaseClient.from("parts").insert(mapSitePart(part)),
+    "Cadastro demorou demais. Verifique sua internet e tente novamente."
+  );
 
   if (error) {
     if (isDuplicatePartError(error)) {
@@ -154,7 +166,7 @@ async function updatePart(part, password) {
     return;
   }
 
-  const { error } = await supabaseClient.rpc("update_part_with_password", {
+  const rpcPayload = {
     part_id_input: part.id,
     password_input: password,
     photo_input: part.photoChanged ? part.photo : null,
@@ -162,9 +174,27 @@ async function updatePart(part, password) {
     code_input: part.code,
     drawing_number_input: part.drawingNumber,
     application_input: part.application,
-    assembly_input: part.assembly,
     registered_by_input: part.registeredBy
-  });
+  };
+
+  let { error } = await withTimeout(
+    supabaseClient.rpc("update_part_with_password", rpcPayload),
+    "Edição demorou demais. Verifique sua internet e tente novamente."
+  );
+
+  if (isMissingFunctionError(error)) {
+    const legacyPayload = {
+      ...rpcPayload,
+      assembly_input: "NAO INFORMADO"
+    };
+
+    const legacyResult = await withTimeout(
+      supabaseClient.rpc("update_part_with_password", legacyPayload),
+      "Edição demorou demais. Verifique sua internet e tente novamente."
+    );
+
+    error = legacyResult.error;
+  }
 
   if (error) {
     if (isDuplicatePartError(error)) {
@@ -192,16 +222,19 @@ async function removePart(partId, password) {
     return;
   }
 
-  const { error } = await supabaseClient.rpc("delete_part_with_password", {
-    part_id_input: partId,
-    password_input: password
-  });
+  const { error } = await withTimeout(
+    supabaseClient.rpc("delete_part_with_password", {
+      part_id_input: partId,
+      password_input: password
+    }),
+    "Exclusão demorou demais. Verifique sua internet e tente novamente."
+  );
 
   if (error) {
     throw new Error(error.message || "Não foi possível excluir o item.");
   }
 
-  await loadParts();
+  partsCache = partsCache.filter((part) => part.id !== partId);
 }
 
 function showScreen(screenId) {
@@ -246,13 +279,14 @@ function fileToBase64(file) {
       image.onerror = () => resolve(reader.result);
       image.src = reader.result;
     };
+
     reader.onerror = () => reject(new Error("Não foi possível carregar a foto."));
     reader.readAsDataURL(file);
   });
 }
 
 function normalizeText(value) {
-  return value.toLowerCase().trim();
+  return String(value || "").toLowerCase().trim();
 }
 
 function normalizeInputValue(value) {
@@ -285,6 +319,21 @@ function isDuplicatePartError(error) {
   );
 }
 
+function isMissingFunctionError(error) {
+  if (!error) {
+    return false;
+  }
+
+  const message = normalizeText(error.message || "");
+  const code = error.code || "";
+
+  return (
+    code === "PGRST202" ||
+    message.includes("could not find the function") ||
+    message.includes("schema cache")
+  );
+}
+
 function partMatchesSearch(part, searchTerm) {
   if (!searchTerm) {
     return true;
@@ -303,7 +352,6 @@ function createPartCard(part) {
   card.className = "part-card";
 
   const media = createPartMedia(part);
-
   const info = document.createElement("div");
   info.className = "part-info";
 
@@ -387,67 +435,39 @@ function createPartId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function showSuccessToast() {
-  clearTimeout(successToastTimer);
-  successToast.classList.remove("active");
-  successToast.setAttribute("aria-hidden", "false");
+function showToast(toast, timerRefName, message) {
+  if (message) {
+    toast.querySelector("p").textContent = message;
+  }
+
+  clearTimeout(window[timerRefName]);
+  toast.classList.remove("active");
+  toast.setAttribute("aria-hidden", "false");
 
   requestAnimationFrame(() => {
-    successToast.classList.add("active");
+    toast.classList.add("active");
   });
 
-  successToastTimer = setTimeout(() => {
-    successToast.classList.remove("active");
-    successToast.setAttribute("aria-hidden", "true");
+  window[timerRefName] = setTimeout(() => {
+    toast.classList.remove("active");
+    toast.setAttribute("aria-hidden", "true");
   }, 1900);
+}
+
+function showSuccessToast() {
+  showToast(successToast, "successToastTimer");
 }
 
 function showEditToast() {
-  clearTimeout(editToastTimer);
-  editToast.classList.remove("active");
-  editToast.setAttribute("aria-hidden", "false");
-
-  requestAnimationFrame(() => {
-    editToast.classList.add("active");
-  });
-
-  editToastTimer = setTimeout(() => {
-    editToast.classList.remove("active");
-    editToast.setAttribute("aria-hidden", "true");
-  }, 1900);
+  showToast(editToast, "editToastTimer");
 }
 
 function showDeleteToast() {
-  clearTimeout(deleteToastTimer);
-  deleteToast.classList.remove("active");
-  deleteToast.setAttribute("aria-hidden", "false");
-
-  requestAnimationFrame(() => {
-    deleteToast.classList.add("active");
-  });
-
-  deleteToastTimer = setTimeout(() => {
-    deleteToast.classList.remove("active");
-    deleteToast.setAttribute("aria-hidden", "true");
-  }, 1900);
+  showToast(deleteToast, "deleteToastTimer");
 }
 
 function showWarningToast(message) {
-  const warningMessage = warningToast.querySelector("p");
-
-  warningMessage.textContent = message;
-  clearTimeout(warningToastTimer);
-  warningToast.classList.remove("active");
-  warningToast.setAttribute("aria-hidden", "false");
-
-  requestAnimationFrame(() => {
-    warningToast.classList.add("active");
-  });
-
-  warningToastTimer = setTimeout(() => {
-    warningToast.classList.remove("active");
-    warningToast.setAttribute("aria-hidden", "true");
-  }, 1900);
+  showToast(warningToast, "warningToastTimer", message);
 }
 
 function fillEditModal(part) {
@@ -636,13 +656,6 @@ cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
 
-deletePasswordInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && confirmNeedsPassword) {
-    event.preventDefault();
-    confirmPendingAction();
-  }
-});
-
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
     closeConfirmModal();
@@ -677,6 +690,13 @@ photoModal.addEventListener("click", (event) => {
   }
 });
 
+deletePasswordInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && confirmNeedsPassword) {
+    event.preventDefault();
+    confirmPendingAction();
+  }
+});
+
 partForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -684,22 +704,23 @@ partForm.addEventListener("submit", async (event) => {
   const photoFile = document.querySelector("#photo").files[0];
   submitButton.disabled = true;
   submitButton.textContent = "Salvando...";
-
-  const part = {
-    id: createPartId(),
-    photo: photoFile ? await fileToBase64(photoFile) : "",
-    name: normalizeInputValue(document.querySelector("#name").value),
-    code: normalizeInputValue(document.querySelector("#code").value),
-    drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
-    application: normalizeInputValue(document.querySelector("#application").value),
-    assembly: "NAO INFORMADO",
-    registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value)
-  };
+  formMessage.textContent = "";
 
   try {
+    const part = {
+      id: createPartId(),
+      photo: photoFile ? await fileToBase64(photoFile) : "",
+      name: normalizeInputValue(document.querySelector("#name").value),
+      code: normalizeInputValue(document.querySelector("#code").value),
+      drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
+      application: normalizeInputValue(document.querySelector("#application").value),
+      registeredBy: normalizeInputValue(document.querySelector("#registeredBy").value),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
     await addPart(part);
     partForm.reset();
-    formMessage.textContent = "";
     showSuccessToast();
     renderResults();
   } catch (error) {
@@ -732,22 +753,21 @@ editForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  const photoFile = document.querySelector("#editPhoto").files[0];
-  const hasNewPhoto = Boolean(photoFile);
-  const updatedPart = {
-    id: currentPart.id,
-    photo: hasNewPhoto ? await fileToBase64(photoFile) : currentPart.photo,
-    photoChanged: hasNewPhoto,
-    name: normalizeInputValue(document.querySelector("#editName").value),
-    code: normalizeInputValue(document.querySelector("#editCode").value),
-    drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
-    application: normalizeInputValue(document.querySelector("#editApplication").value),
-    assembly: currentPart.assembly || "NAO INFORMADO",
-    registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
-    createdAt: currentPart.createdAt
-  };
-
   try {
+    const photoFile = document.querySelector("#editPhoto").files[0];
+    const hasNewPhoto = Boolean(photoFile);
+    const updatedPart = {
+      id: currentPart.id,
+      photo: hasNewPhoto ? await fileToBase64(photoFile) : currentPart.photo,
+      photoChanged: hasNewPhoto,
+      name: normalizeInputValue(document.querySelector("#editName").value),
+      code: normalizeInputValue(document.querySelector("#editCode").value),
+      drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
+      application: normalizeInputValue(document.querySelector("#editApplication").value),
+      registeredBy: normalizeInputValue(document.querySelector("#editRegisteredBy").value),
+      createdAt: currentPart.createdAt
+    };
+
     await updatePart(updatedPart, editPassword);
     closeEditModal();
     showEditToast();

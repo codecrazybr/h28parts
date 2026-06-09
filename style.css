@@ -210,8 +210,13 @@ select:focus {
   font-family: inherit;
   text-transform: uppercase;
   letter-spacing: 0;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, opacity 0.18s ease;
   min-height: 46px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .primary-button {
@@ -452,25 +457,10 @@ select:focus {
   transform: translate(-50%, -44%) scale(0.92);
 }
 
-.success-toast {
-  border: 1px solid rgba(27, 135, 64, 0.22);
-  color: #146c2e;
-}
-
-.edit-toast {
-  border: 1px solid rgba(47, 68, 147, 0.22);
-  color: var(--blue);
-}
-
-.delete-toast {
-  border: 1px solid rgba(180, 35, 24, 0.22);
-  color: var(--danger);
-}
-
-.warning-toast {
-  border: 1px solid rgba(233, 154, 90, 0.34);
-  color: var(--orange-dark);
-}
+.success-toast { border: 1px solid rgba(27, 135, 64, 0.22); color: #146c2e; }
+.edit-toast { border: 1px solid rgba(47, 68, 147, 0.22); color: var(--blue); }
+.delete-toast { border: 1px solid rgba(180, 35, 24, 0.22); color: var(--danger); }
+.warning-toast { border: 1px solid rgba(233, 154, 90, 0.34); color: var(--orange-dark); }
 
 .success-toast.active,
 .edit-toast.active,
@@ -502,25 +492,10 @@ select:focus {
   border-radius: 50%;
 }
 
-.success-check {
-  background: linear-gradient(180deg, #39c66a, #16843a);
-  box-shadow: 0 14px 28px rgba(22, 132, 58, 0.28);
-}
-
-.edit-check {
-  background: linear-gradient(180deg, var(--blue-light), var(--blue));
-  box-shadow: 0 14px 28px rgba(47, 68, 147, 0.26);
-}
-
-.delete-check {
-  background: linear-gradient(180deg, #df4438, var(--danger));
-  box-shadow: 0 14px 28px rgba(180, 35, 24, 0.28);
-}
-
-.warning-check {
-  background: linear-gradient(180deg, #f0aa67, var(--orange-dark));
-  box-shadow: 0 14px 28px rgba(233, 154, 90, 0.3);
-}
+.success-check { background: linear-gradient(180deg, #39c66a, #16843a); box-shadow: 0 14px 28px rgba(22, 132, 58, 0.28); }
+.edit-check { background: linear-gradient(180deg, var(--blue-light), var(--blue)); box-shadow: 0 14px 28px rgba(47, 68, 147, 0.26); }
+.delete-check { background: linear-gradient(180deg, #df4438, var(--danger)); box-shadow: 0 14px 28px rgba(180, 35, 24, 0.28); }
+.warning-check { background: linear-gradient(180deg, #f0aa67, var(--orange-dark)); box-shadow: 0 14px 28px rgba(233, 154, 90, 0.3); }
 
 .success-check svg,
 .edit-check svg,
@@ -544,36 +519,20 @@ select:focus {
   animation: drawCheck 0.45s ease 0.18s forwards;
 }
 
-.success-check path {
+.success-check path,
+.edit-check path {
   stroke-width: 6;
 }
 
 @keyframes successPop {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -42%) scale(0.9);
-  }
-
-  16% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  78% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -54%) scale(0.96);
-  }
+  0% { opacity: 0; transform: translate(-50%, -42%) scale(0.9); }
+  16% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(0.96); }
 }
 
 @keyframes drawCheck {
-  to {
-    stroke-dashoffset: 0;
-  }
+  to { stroke-dashoffset: 0; }
 }
 
 .modal-box h2 {
