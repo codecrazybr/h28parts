@@ -1,4 +1,5 @@
 const storageKey = "h28Parts";
+const photoBucket = "parts";
 const supabaseConfig = window.H28_SUPABASE_CONFIG || {};
 const supabaseUrl = supabaseConfig.url || "";
 const supabaseAnonKey = supabaseConfig.anonKey || "";
@@ -41,10 +42,6 @@ let partIdPendingDelete = null;
 let partIdPendingEdit = null;
 let partIdBeingEdited = null;
 let editPassword = "";
-let successToastTimer = null;
-let editToastTimer = null;
-let deleteToastTimer = null;
-let warningToastTimer = null;
 let partsCache = [];
 let confirmNeedsPassword = false;
 let searchTimer = null;
@@ -60,10 +57,6 @@ function withTimeout(promise, message = "A conexão demorou demais. Tente novame
   });
 
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-}
-
-function getParts() {
-  return partsCache;
 }
 
 function getLocalParts() {
@@ -83,7 +76,7 @@ function mapDatabasePart(part) {
     code: part.code,
     drawingNumber: part.drawing_number,
     application: part.application,
-    registeredBy: part.registered_by || "",
+    registeredBy: part.registered_by || "NAO INFORMADO",
     createdAt: part.created_at || "",
     updatedAt: part.updated_at || part.created_at || ""
   };
@@ -97,43 +90,40 @@ function mapSitePart(part) {
     code: part.code,
     drawing_number: part.drawingNumber,
     application: part.application,
-    registered_by: part.registeredBy,
+    registered_by: part.registeredBy || "NAO INFORMADO",
     updated_at: new Date().toISOString()
   };
 }
 
 async function loadParts(searchValue = "") {
-  const searchTerm = normalizeText(searchValue);
+  const normalizedSearch = normalizeText(searchValue);
 
-  if (!searchTerm) {
+  if (!normalizedSearch) {
     partsCache = [];
     return;
   }
 
   if (!supabaseClient) {
     partsCache = getLocalParts()
-      .filter((part) => partMatchesSearch(part, searchTerm))
+      .filter((part) => partMatchesSearch(part, normalizedSearch))
       .slice(0, 50);
     return;
   }
 
-  const searchText = normalizeInputValue(searchValue);
-  const safeSearchTerm = searchText.replace(/[%,()]/g, " ").trim();
+  const safeSearchTerm = normalizeInputValue(searchValue).replace(/[%,()]/g, " ").trim();
   let query = supabaseClient
     .from("parts")
-    .select("id, name, code, drawing_number, application")
+    .select("id, name, code, drawing_number, application, photo")
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (safeSearchTerm) {
-    const searchFilter = [
+    query = query.or([
       `name.ilike.%${safeSearchTerm}%`,
       `code.ilike.%${safeSearchTerm}%`,
       `drawing_number.ilike.%${safeSearchTerm}%`,
       `application.ilike.%${safeSearchTerm}%`
-    ].join(",");
-
-    query = query.or(searchFilter);
+    ].join(","));
   }
 
   const { data, error } = await withTimeout(
@@ -148,9 +138,23 @@ async function loadParts(searchValue = "") {
   partsCache = data.map(mapDatabasePart);
 }
 
+function isStorageUrl(value) {
+  return /^https?:\/\//i.test(value || "");
+}
+
+function isBase64Photo(value) {
+  return /^data:image\//i.test(value || "");
+}
+
 async function loadPartPhoto(partId) {
+  const part = partsCache.find((item) => item.id === partId);
+
+  if (part?.photo) {
+    return part.photo;
+  }
+
   if (!supabaseClient) {
-    const localPart = getLocalParts().find((part) => part.id === partId);
+    const localPart = getLocalParts().find((item) => item.id === partId);
     return localPart?.photo || "";
   }
 
@@ -195,8 +199,6 @@ async function addPart(part) {
 
     throw new Error(error.message || "Não foi possível cadastrar o item.");
   }
-
-  partsCache = [part, ...partsCache];
 }
 
 async function updatePart(part, password) {
@@ -223,7 +225,7 @@ async function updatePart(part, password) {
     code_input: part.code,
     drawing_number_input: part.drawingNumber,
     application_input: part.application,
-    registered_by_input: part.registeredBy
+    registered_by_input: part.registeredBy || "NAO INFORMADO"
   };
 
   let { error } = await withTimeout(
@@ -232,13 +234,11 @@ async function updatePart(part, password) {
   );
 
   if (isMissingFunctionError(error)) {
-    const legacyPayload = {
-      ...rpcPayload,
-      assembly_input: "NAO INFORMADO"
-    };
-
     const legacyResult = await withTimeout(
-      supabaseClient.rpc("update_part_with_password", legacyPayload),
+      supabaseClient.rpc("update_part_with_password", {
+        ...rpcPayload,
+        assembly_input: "NAO INFORMADO"
+      }),
       "Edição demorou demais. Verifique sua internet e tente novamente."
     );
 
@@ -252,11 +252,6 @@ async function updatePart(part, password) {
 
     throw new Error(error.message || "Não foi possível atualizar o item.");
   }
-
-  partsCache = partsCache.map((item) => item.id === part.id ? {
-    ...part,
-    updatedAt: new Date().toISOString()
-  } : item);
 }
 
 async function removePart(partId, password) {
@@ -282,8 +277,6 @@ async function removePart(partId, password) {
   if (error) {
     throw new Error(error.message || "Não foi possível excluir o item.");
   }
-
-  partsCache = partsCache.filter((part) => part.id !== partId);
 }
 
 function showScreen(screenId) {
@@ -300,7 +293,7 @@ function showScreen(screenId) {
   }
 }
 
-function fileToBase64(file) {
+function compressImageFile(file) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith("image/")) {
       reject(new Error("Selecione uma imagem válida."));
@@ -319,15 +312,22 @@ function fileToBase64(file) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
 
-        canvas.width = Math.round(image.width * scale);
-        canvas.height = Math.round(image.height * scale);
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = "high";
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.5));
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("Não foi possível comprimir a foto."));
+            return;
+          }
+
+          resolve(blob);
+        }, "image/jpeg", 0.5);
       };
 
       image.onerror = () => reject(new Error("Não foi possível comprimir a foto. Tente escolher outra imagem."));
@@ -339,23 +339,73 @@ function fileToBase64(file) {
   });
 }
 
-function normalizeText(value) {
-  return String(value || "").toLowerCase().trim();
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Não foi possível carregar a foto."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function preparePhoto(file, partId) {
+  if (!file) {
+    return "";
+  }
+
+  const compressedBlob = await compressImageFile(file);
+
+  if (!supabaseClient) {
+    return blobToBase64(compressedBlob);
+  }
+
+  const path = `${partId}/${Date.now()}.jpg`;
+  const { error } = await withTimeout(
+    supabaseClient.storage
+      .from(photoBucket)
+      .upload(path, compressedBlob, {
+        cacheControl: "31536000",
+        contentType: "image/jpeg",
+        upsert: true
+      }),
+    "Não foi possível enviar a foto. Verifique sua internet e tente novamente."
+  );
+
+  if (error) {
+    throw new Error(error.message || "Não foi possível enviar a foto.");
+  }
+
+  const { data } = supabaseClient.storage.from(photoBucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function createPartId() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function normalizeInputValue(value) {
   return value.trim().toUpperCase();
 }
 
-function formatDateTime(value) {
-  if (!value) {
-    return "-";
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
+function partMatchesSearch(part, searchTerm) {
+  if (!searchTerm) {
+    return true;
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short"
-  }).format(new Date(value));
+  return [part.name, part.code, part.drawingNumber, part.application]
+    .some((value) => normalizeText(value).includes(searchTerm));
 }
 
 function isDuplicatePartError(error) {
@@ -364,12 +414,9 @@ function isDuplicatePartError(error) {
 
   return (
     code === "23505" ||
-    message.includes("já está cadastrada") ||
-    message.includes("ja esta cadastrada") ||
-    message.includes("já está cadastrado") ||
-    message.includes("ja esta cadastrado") ||
-    message.includes("duplicate") ||
-    message.includes("parts_code_unique")
+    message.includes("DUPLICATE") ||
+    message.includes("PARTS_CODE_UNIQUE") ||
+    message.includes("JA ESTA CADASTRADO")
   );
 }
 
@@ -379,26 +426,7 @@ function isMissingFunctionError(error) {
   }
 
   const message = normalizeText(error.message || "");
-  const code = error.code || "";
-
-  return (
-    code === "PGRST202" ||
-    message.includes("could not find the function") ||
-    message.includes("schema cache")
-  );
-}
-
-function partMatchesSearch(part, searchTerm) {
-  if (!searchTerm) {
-    return true;
-  }
-
-  return [
-    part.name,
-    part.code,
-    part.drawingNumber,
-    part.application
-  ].some((field) => normalizeText(field).includes(searchTerm));
+  return error.code === "PGRST202" || message.includes("COULD NOT FIND THE FUNCTION") || message.includes("SCHEMA CACHE");
 }
 
 function createPartCard(part) {
@@ -416,39 +444,24 @@ function createPartCard(part) {
   const drawingNumber = createInfoLine("Número do desenho:", part.drawingNumber);
   const application = createInfoLine("Aplicação:", part.application);
 
+  const actions = document.createElement("div");
+  actions.className = "card-actions";
+
+  const editButton = document.createElement("button");
+  editButton.className = "icon-button primary-button";
+  editButton.type = "button";
+  editButton.title = "Editar item";
+  editButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>';
+  editButton.addEventListener("click", () => requestEditPart(part.id));
+
   const deleteButton = document.createElement("button");
   deleteButton.className = "icon-button delete-button";
   deleteButton.type = "button";
   deleteButton.title = "Excluir item";
-  deleteButton.setAttribute("aria-label", "Excluir item");
-  deleteButton.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 6h18"></path>
-      <path d="M8 6V4h8v2"></path>
-      <path d="M6 6l1 15h10l1-15"></path>
-      <path d="M10 11v6"></path>
-      <path d="M14 11v6"></path>
-    </svg>
-  `;
+  deleteButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M6 6l1 15h10l1-15"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>';
   deleteButton.addEventListener("click", () => deletePart(part.id));
 
-  const editButton = document.createElement("button");
-  editButton.className = "icon-button edit-button";
-  editButton.type = "button";
-  editButton.title = "Editar item";
-  editButton.setAttribute("aria-label", "Editar item");
-  editButton.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 20h9"></path>
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
-    </svg>
-  `;
-  editButton.addEventListener("click", () => requestEditPart(part.id));
-
-  const actions = document.createElement("div");
-  actions.className = "card-actions";
   actions.append(editButton, deleteButton);
-
   info.append(title, code, drawingNumber, application, actions);
   card.append(media, info);
 
@@ -456,81 +469,57 @@ function createPartCard(part) {
 }
 
 function createPartMedia(part) {
-  if (part.photo) {
-    const image = document.createElement("img");
-    image.src = part.photo;
-    image.alt = `Foto do item ${part.name}`;
-    image.title = "Clique para ampliar";
-    image.addEventListener("click", () => openPhotoModal(part));
-
-    return image;
-  }
-
-  if (part.photoLoaded) {
+  if (!part.photo) {
     const placeholder = document.createElement("div");
     placeholder.className = "part-photo-placeholder";
     placeholder.textContent = "Sem foto";
     return placeholder;
   }
 
-  const button = document.createElement("button");
-  button.className = "part-photo-load-button";
-  button.type = "button";
-  button.textContent = "Ver foto";
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    button.textContent = "Carregando...";
+  if (isStorageUrl(part.photo) || isBase64Photo(part.photo)) {
+    const button = document.createElement("button");
+    button.className = "part-photo-load-button";
+    button.type = "button";
+    button.title = "Ver foto";
+    button.setAttribute("aria-label", "Ver foto");
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    button.addEventListener("click", () => openPhotoModal(part));
+    return button;
+  }
 
-    try {
-      const photo = await loadPartPhoto(part.id);
-      part.photo = photo;
-      part.photoLoaded = true;
-
-      if (!photo) {
-        button.replaceWith(createPartMedia(part));
-        return;
-      }
-
-      renderResults();
-      openPhotoModal(part);
-    } catch (error) {
-      button.disabled = false;
-      button.textContent = "Ver foto";
-      showWarningToast(error.message);
-    }
-  });
-
-  return button;
+  const placeholder = document.createElement("div");
+  placeholder.className = "part-photo-placeholder";
+  placeholder.textContent = "Sem foto";
+  return placeholder;
 }
 
 function createInfoLine(label, value) {
   const line = document.createElement("p");
   const strong = document.createElement("strong");
-
   strong.textContent = label;
-  line.append(strong, ` ${value}`);
-
+  line.append(strong, ` ${value || "-"}`);
   return line;
 }
 
-function createPartId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function showToast(toast, timerRefName, message) {
-  if (message) {
-    toast.querySelector("p").textContent = message;
+function showToast(toast, timerName, message = "") {
+  if (!toast) {
+    return;
   }
 
-  clearTimeout(window[timerRefName]);
+  if (message) {
+    const text = toast.querySelector("p");
+    if (text) {
+      text.textContent = message;
+    }
+  }
+
+  clearTimeout(window[timerName]);
   toast.classList.remove("active");
   toast.setAttribute("aria-hidden", "false");
 
-  requestAnimationFrame(() => {
-    toast.classList.add("active");
-  });
+  requestAnimationFrame(() => toast.classList.add("active"));
 
-  window[timerRefName] = setTimeout(() => {
+  window[timerName] = setTimeout(() => {
     toast.classList.remove("active");
     toast.setAttribute("aria-hidden", "true");
   }, 1900);
@@ -570,7 +559,7 @@ function closeEditModal() {
 }
 
 function openEditPart(partId) {
-  const part = getParts().find((item) => item.id === partId);
+  const part = partsCache.find((item) => item.id === partId);
 
   if (!part) {
     return;
@@ -616,24 +605,16 @@ function openConfirmModal({ title, message, actionLabel, actionClass, needsPassw
 }
 
 function renderResults() {
-  const parts = getParts();
-  const filteredParts = parts;
-
   results.innerHTML = "";
 
-  if (parts.length === 0) {
+  if (partsCache.length === 0) {
     results.innerHTML = searchInput.value.trim()
       ? '<p class="empty-state">Nenhum item encontrado.</p>'
       : '<p class="empty-state">Digite uma pesquisa para consultar os itens.</p>';
     return;
   }
 
-  if (filteredParts.length === 0) {
-    results.innerHTML = '<p class="empty-state">Nenhum item encontrado.</p>';
-    return;
-  }
-
-  filteredParts.forEach((part) => {
+  partsCache.forEach((part) => {
     results.appendChild(createPartCard(part));
   });
 }
@@ -648,11 +629,9 @@ async function refreshResults({ loading = false } = {}) {
   try {
     await loadParts(searchInput.value);
 
-    if (token !== lastSearchToken) {
-      return;
+    if (token === lastSearchToken) {
+      renderResults();
     }
-
-    renderResults();
   } catch (error) {
     if (token === lastSearchToken) {
       results.innerHTML = `<p class="empty-state">${error.message}</p>`;
@@ -662,9 +641,7 @@ async function refreshResults({ loading = false } = {}) {
 
 function scheduleRefreshResults() {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    refreshResults({ loading: true });
-  }, 350);
+  searchTimer = setTimeout(() => refreshResults({ loading: true }), 350);
 }
 
 function deletePart(partId) {
@@ -766,10 +743,23 @@ searchInput.addEventListener("input", scheduleRefreshResults);
 cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
+closePhotoModalButton.addEventListener("click", closePhotoModal);
 
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
     closeConfirmModal();
+  }
+});
+
+editModal.addEventListener("click", (event) => {
+  if (event.target === editModal) {
+    closeEditModal();
+  }
+});
+
+photoModal.addEventListener("click", (event) => {
+  if (event.target === photoModal) {
+    closePhotoModal();
   }
 });
 
@@ -787,20 +777,6 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-editModal.addEventListener("click", (event) => {
-  if (event.target === editModal) {
-    closeEditModal();
-  }
-});
-
-closePhotoModalButton.addEventListener("click", closePhotoModal);
-
-photoModal.addEventListener("click", (event) => {
-  if (event.target === photoModal) {
-    closePhotoModal();
-  }
-});
-
 deletePasswordInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && confirmNeedsPassword) {
     event.preventDefault();
@@ -813,15 +789,18 @@ partForm.addEventListener("submit", async (event) => {
 
   const submitButton = partForm.querySelector("button[type='submit']");
   const photoFile = document.querySelector("#photo").files[0];
+  const partId = createPartId();
+
   submitButton.disabled = true;
   submitButton.textContent = "Salvando...";
   formMessage.textContent = "";
 
   try {
+    const photoUrl = await preparePhoto(photoFile, partId);
     const part = {
-      id: createPartId(),
-      photo: photoFile ? await fileToBase64(photoFile) : "",
-      photoLoaded: true,
+      id: partId,
+      photo: photoUrl,
+      photoLoaded: Boolean(photoUrl),
       name: normalizeInputValue(document.querySelector("#name").value),
       code: normalizeInputValue(document.querySelector("#code").value),
       drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
@@ -852,8 +831,8 @@ editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const submitButton = editForm.querySelector("button[type='submit']");
-  const parts = getParts();
-  const currentPart = parts.find((part) => part.id === partIdBeingEdited);
+  const currentPart = partsCache.find((part) => part.id === partIdBeingEdited);
+
   submitButton.disabled = true;
   submitButton.textContent = "Salvando...";
 
@@ -868,9 +847,10 @@ editForm.addEventListener("submit", async (event) => {
   try {
     const photoFile = document.querySelector("#editPhoto").files[0];
     const hasNewPhoto = Boolean(photoFile);
+    const photoUrl = hasNewPhoto ? await preparePhoto(photoFile, currentPart.id) : currentPart.photo;
     const updatedPart = {
       id: currentPart.id,
-      photo: hasNewPhoto ? await fileToBase64(photoFile) : currentPart.photo,
+      photo: photoUrl,
       photoChanged: hasNewPhoto,
       photoLoaded: currentPart.photoLoaded || hasNewPhoto,
       name: normalizeInputValue(document.querySelector("#editName").value),
@@ -891,11 +871,11 @@ editForm.addEventListener("submit", async (event) => {
       return;
     }
 
-    alert(error.message);
+    showWarningToast(error.message);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Salvar edição";
   }
 });
 
-refreshResults({ loading: true });
+renderResults();
