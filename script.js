@@ -54,6 +54,10 @@ let lastSearchToken = 0;
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
 
+document.addEventListener("gesturestart", (event) => {
+  event.preventDefault();
+});
+
 function withTimeout(promise, message = "A conexão demorou demais. Tente novamente.") {
   let timeoutId;
   const timeout = new Promise((_, reject) => {
