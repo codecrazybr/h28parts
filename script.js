@@ -76,6 +76,7 @@ function mapDatabasePart(part) {
   return {
     id: part.id,
     photo: part.photo || "",
+    photoLoaded: Boolean(part.photo),
     name: part.name,
     code: part.code,
     drawingNumber: part.drawing_number,
@@ -108,7 +109,7 @@ async function loadParts() {
   const { data, error } = await withTimeout(
     supabaseClient
       .from("parts")
-      .select("id, photo, name, code, drawing_number, application, registered_by, created_at, updated_at")
+      .select("id, name, code, drawing_number, application, registered_by, created_at, updated_at")
       .order("created_at", { ascending: false }),
     "Não foi possível carregar os itens. Verifique sua internet."
   );
@@ -119,6 +120,28 @@ async function loadParts() {
   }
 
   partsCache = data.map(mapDatabasePart);
+}
+
+async function loadPartPhoto(partId) {
+  if (!supabaseClient) {
+    const localPart = getLocalParts().find((part) => part.id === partId);
+    return localPart?.photo || "";
+  }
+
+  const { data, error } = await withTimeout(
+    supabaseClient
+      .from("parts")
+      .select("photo")
+      .eq("id", partId)
+      .single(),
+    "Não foi possível carregar a foto. Tente novamente."
+  );
+
+  if (error) {
+    throw new Error(error.message || "Não foi possível carregar a foto.");
+  }
+
+  return data?.photo || "";
 }
 
 async function addPart(part) {
@@ -264,8 +287,8 @@ function fileToBase64(file) {
       const image = new Image();
 
       image.onload = () => {
-        const maxWidth = 720;
-        const maxHeight = 540;
+        const maxWidth = 480;
+        const maxHeight = 360;
         const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -278,7 +301,7 @@ function fileToBase64(file) {
         context.imageSmoothingQuality = "high";
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.62));
+        resolve(canvas.toDataURL("image/jpeg", 0.5));
       };
 
       image.onerror = () => reject(new Error("Não foi possível comprimir a foto. Tente escolher outra imagem."));
@@ -410,20 +433,51 @@ function createPartCard(part) {
 }
 
 function createPartMedia(part) {
-  if (!part.photo) {
+  if (part.photo) {
+    const image = document.createElement("img");
+    image.src = part.photo;
+    image.alt = `Foto do item ${part.name}`;
+    image.title = "Clique para ampliar";
+    image.addEventListener("click", () => openPhotoModal(part));
+
+    return image;
+  }
+
+  if (part.photoLoaded) {
     const placeholder = document.createElement("div");
     placeholder.className = "part-photo-placeholder";
     placeholder.textContent = "Sem foto";
     return placeholder;
   }
 
-  const image = document.createElement("img");
-  image.src = part.photo;
-  image.alt = `Foto do item ${part.name}`;
-  image.title = "Clique para ampliar";
-  image.addEventListener("click", () => openPhotoModal(part));
+  const button = document.createElement("button");
+  button.className = "part-photo-load-button";
+  button.type = "button";
+  button.textContent = "Ver foto";
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    button.textContent = "Carregando...";
 
-  return image;
+    try {
+      const photo = await loadPartPhoto(part.id);
+      part.photo = photo;
+      part.photoLoaded = true;
+
+      if (!photo) {
+        button.replaceWith(createPartMedia(part));
+        return;
+      }
+
+      renderResults();
+      openPhotoModal(part);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Ver foto";
+      showWarningToast(error.message);
+    }
+  });
+
+  return button;
 }
 
 function createInfoLine(label, value) {
@@ -715,6 +769,7 @@ partForm.addEventListener("submit", async (event) => {
     const part = {
       id: createPartId(),
       photo: photoFile ? await fileToBase64(photoFile) : "",
+      photoLoaded: true,
       name: normalizeInputValue(document.querySelector("#name").value),
       code: normalizeInputValue(document.querySelector("#code").value),
       drawingNumber: normalizeInputValue(document.querySelector("#drawingNumber").value),
@@ -765,6 +820,7 @@ editForm.addEventListener("submit", async (event) => {
       id: currentPart.id,
       photo: hasNewPhoto ? await fileToBase64(photoFile) : currentPart.photo,
       photoChanged: hasNewPhoto,
+      photoLoaded: currentPart.photoLoaded || hasNewPhoto,
       name: normalizeInputValue(document.querySelector("#editName").value),
       code: normalizeInputValue(document.querySelector("#editCode").value),
       drawingNumber: normalizeInputValue(document.querySelector("#editDrawingNumber").value),
