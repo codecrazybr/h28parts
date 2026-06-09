@@ -253,14 +253,19 @@ function showScreen(screenId) {
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith("image/")) {
+      reject(new Error("Selecione uma imagem válida."));
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = () => {
       const image = new Image();
 
       image.onload = () => {
-        const maxWidth = 900;
-        const maxHeight = 700;
+        const maxWidth = 720;
+        const maxHeight = 540;
         const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
@@ -273,10 +278,10 @@ function fileToBase64(file) {
         context.imageSmoothingQuality = "high";
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        resolve(canvas.toDataURL("image/jpeg", 0.74));
+        resolve(canvas.toDataURL("image/jpeg", 0.62));
       };
 
-      image.onerror = () => resolve(reader.result);
+      image.onerror = () => reject(new Error("Não foi possível comprimir a foto. Tente escolher outra imagem."));
       image.src = reader.result;
     };
 
