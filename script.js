@@ -153,7 +153,7 @@ async function loadItemsCount() {
 
   if (!supabaseClient) {
     const total = getLocalParts().length;
-    itemsCounter.textContent = `Itens cadastrados: ${total}`;
+    itemsCounter.textContent = `Itens: ${total}`;
     return;
   }
 
@@ -169,9 +169,9 @@ async function loadItemsCount() {
       throw error;
     }
 
-    itemsCounter.textContent = `Itens cadastrados: ${count || 0}`;
+    itemsCounter.textContent = `Itens: ${count || 0}`;
   } catch (error) {
-    itemsCounter.textContent = "Itens cadastrados: indisponível";
+    itemsCounter.textContent = "Itens: indisponível";
   }
 }
 
@@ -195,7 +195,7 @@ async function loadClockStatus() {
   }
 
   if (!supabaseClient) {
-    clockStatus.textContent = "Relógio: indisponível localmente";
+    clockStatus.textContent = "Relógio: local";
     return;
   }
 
@@ -214,13 +214,13 @@ async function loadClockStatus() {
     }
 
     if (!data || data.length === 0) {
-      clockStatus.textContent = "Relógio: ativo, aguardando primeira execução";
+      clockStatus.textContent = "Relógio: ativo";
       return;
     }
 
-    clockStatus.textContent = `Relógio: ativo | Última atividade: ${formatClockDate(data[0].created_at)}`;
+    clockStatus.textContent = `Relógio: ${formatClockDate(data[0].created_at)}`;
   } catch (error) {
-    clockStatus.textContent = "Relógio: sem permissão de visualização";
+    clockStatus.textContent = "Relógio: sem leitura";
   }
 }
 
@@ -236,7 +236,7 @@ async function loadUsageStatus() {
 
   usageButton.disabled = true;
   usageButton.textContent = "Atualizando...";
-  usageStatus.textContent = "Uso: atualizando dados...";
+  usageStatus.textContent = "Uso: atualizando...";
 
   try {
     const response = await withTimeout(
@@ -256,18 +256,17 @@ async function loadUsageStatus() {
       throw new Error(data.message || "Não foi possível carregar o uso.");
     }
 
-    const lastClock = data.lastClockAt ? formatClockDate(data.lastClockAt) : "aguardando";
     usageStatus.textContent = [
       `Itens: ${data.totalItems}`,
-      `Fotos antigas: ${data.base64Photos} (${data.base64Mb} MB)`,
-      `Storage: ${data.storageFiles} arquivos (${data.storageMb} MB)`,
-      `Relógio: ${lastClock}`
+      `Base64: ${data.base64Photos} (${data.base64Mb} MB)`,
+      `Storage: ${data.storageMb} MB`,
+      `Arquivos: ${data.storageFiles}`
     ].join(" | ");
   } catch (error) {
     usageStatus.textContent = `Uso: ${error.message}`;
   } finally {
     usageButton.disabled = false;
-    usageButton.textContent = "Atualizar uso";
+    usageButton.textContent = "Atualizar";
   }
 }
 

@@ -212,36 +212,47 @@ select:focus {
 
 .system-status {
   display: flex;
-  gap: 10px;
-  align-items: stretch;
+  gap: 8px;
+  align-items: center;
   flex-wrap: wrap;
   margin: -8px 0 16px;
 }
 
 .footer-status {
   margin: 24px 0 0;
-  padding-top: 16px;
-  border-top: 1px solid var(--steel);
+  padding: 12px;
+  border: 1px solid var(--steel);
+  border-left: 5px solid var(--orange);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef3ff 100%);
 }
 
-.items-counter,
-.clock-status {
+.status-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 8px 12px;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 10px;
   border: 1px solid var(--steel);
-  border-left: 4px solid var(--orange);
-  border-radius: 6px;
-  background: var(--blue-soft);
+  border-radius: 999px;
+  background: var(--white);
   color: var(--blue-dark);
   font-weight: 800;
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.clock-status {
-  border-left-color: var(--blue);
-  background: var(--white);
+.system-active {
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+  color: var(--white);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2bd66f;
+  box-shadow: 0 0 0 4px rgba(43, 214, 111, 0.15);
 }
 
 .usage-button,
@@ -249,11 +260,11 @@ select:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  padding: 8px 14px;
-  border-radius: 6px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: 999px;
   font-weight: 800;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .usage-button {
@@ -273,8 +284,8 @@ select:focus {
   flex: 1 1 100%;
   justify-content: flex-start;
   border: 1px solid var(--steel);
-  border-left: 4px solid var(--orange);
-  background: var(--gray-50);
+  border-left: 4px solid var(--blue);
+  background: var(--white);
   color: var(--gray-800);
   line-height: 1.35;
 }
@@ -577,6 +588,24 @@ select:focus {
 
   .screen {
     padding: 18px;
+  }
+
+  .footer-status {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .status-pill,
+  .usage-button,
+  .usage-status {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .usage-button {
+    justify-content: center;
   }
 
   .part-card {
