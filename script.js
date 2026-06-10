@@ -22,6 +22,7 @@ const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
 const clockStatus = document.querySelector("#clockStatus");
+const connectionStatus = document.querySelector("#connectionStatus");
 const usageButton = document.querySelector("#usageButton");
 const usageStatus = document.querySelector("#usageStatus");
 const confirmModal = document.querySelector("#confirmModal");
@@ -189,6 +190,36 @@ function formatClockDate(value) {
   }).format(new Date(value));
 }
 
+function formatTime(value = new Date()) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(value);
+}
+
+function setConnectionStatus(status) {
+  if (!connectionStatus) {
+    return;
+  }
+
+  connectionStatus.classList.remove("is-online", "is-offline", "is-checking");
+
+  if (status === "online") {
+    connectionStatus.classList.add("is-online");
+    connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: online';
+    return;
+  }
+
+  if (status === "offline") {
+    connectionStatus.classList.add("is-offline");
+    connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: offline';
+    return;
+  }
+
+  connectionStatus.classList.add("is-checking");
+  connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: verificando';
+}
+
 async function loadClockStatus() {
   if (!clockStatus) {
     return;
@@ -237,6 +268,7 @@ async function loadUsageStatus() {
   usageButton.disabled = true;
   usageButton.textContent = "Atualizando...";
   usageStatus.textContent = "Uso: atualizando...";
+  setConnectionStatus("checking");
 
   try {
     const response = await withTimeout(
@@ -260,10 +292,13 @@ async function loadUsageStatus() {
       `Itens: ${data.totalItems}`,
       `Base64: ${data.base64Photos} (${data.base64Mb} MB)`,
       `Storage: ${data.storageMb} MB`,
-      `Arquivos: ${data.storageFiles}`
+      `Arquivos: ${data.storageFiles}`,
+      `Atualizado às ${formatTime()}`
     ].join(" | ");
+    setConnectionStatus("online");
   } catch (error) {
     usageStatus.textContent = `Uso: ${error.message}`;
+    setConnectionStatus("offline");
   } finally {
     usageButton.disabled = false;
     usageButton.textContent = "Atualizar";

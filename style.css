@@ -247,12 +247,40 @@ select:focus {
   color: var(--white);
 }
 
+.connection-status.is-online {
+  border-color: rgba(31, 157, 85, 0.32);
+  background: rgba(31, 157, 85, 0.08);
+  color: #126437;
+}
+
+.connection-status.is-offline {
+  border-color: rgba(198, 40, 32, 0.32);
+  background: rgba(198, 40, 32, 0.08);
+  color: var(--danger);
+}
+
+.connection-status.is-checking {
+  border-color: var(--steel);
+  background: var(--white);
+  color: var(--gray-500);
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #2bd66f;
   box-shadow: 0 0 0 4px rgba(43, 214, 111, 0.15);
+}
+
+.connection-status.is-offline .status-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px rgba(198, 40, 32, 0.12);
+}
+
+.connection-status.is-checking .status-dot {
+  background: var(--gray-500);
+  box-shadow: 0 0 0 4px rgba(103, 115, 134, 0.12);
 }
 
 .usage-button,
