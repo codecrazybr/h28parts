@@ -22,6 +22,7 @@ const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
 const connectionStatus = document.querySelector("#connectionStatus");
+const refreshStatusButton = document.querySelector("#refreshStatusButton");
 const confirmModal = document.querySelector("#confirmModal");
 const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
@@ -146,13 +147,13 @@ async function loadParts(searchValue = "") {
 
 async function loadItemsCount() {
   if (!itemsCounter) {
-    return;
+    return false;
   }
 
   if (!supabaseClient) {
     const total = getLocalParts().length;
     itemsCounter.textContent = `Itens: ${total}`;
-    return;
+    return true;
   }
 
   try {
@@ -168,8 +169,10 @@ async function loadItemsCount() {
     }
 
     itemsCounter.textContent = `Itens: ${count || 0}`;
+    return true;
   } catch (error) {
     itemsCounter.textContent = "Itens: indisponível";
+    return false;
   }
 }
 
@@ -194,6 +197,23 @@ function setConnectionStatus(status) {
 
   connectionStatus.classList.add("is-checking");
   connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: verificando';
+}
+
+async function refreshFooterStatus() {
+  setConnectionStatus("checking");
+
+  if (refreshStatusButton) {
+    refreshStatusButton.disabled = true;
+    refreshStatusButton.textContent = "Atualizando...";
+  }
+
+  const isOnline = await loadItemsCount();
+  setConnectionStatus(isOnline ? "online" : "offline");
+
+  if (refreshStatusButton) {
+    refreshStatusButton.disabled = false;
+    refreshStatusButton.textContent = "Atualizar";
+  }
 }
 
 function isStorageUrl(value) {
@@ -751,7 +771,7 @@ async function confirmDeletePart() {
     await removePart(partIdPendingDelete, password);
     closeConfirmModal();
     showDeleteToast();
-    loadItemsCount();
+    refreshFooterStatus();
     refreshResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
@@ -803,6 +823,7 @@ cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
 closePhotoModalButton.addEventListener("click", closePhotoModal);
+refreshStatusButton?.addEventListener("click", refreshFooterStatus);
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
     closeConfirmModal();
@@ -871,7 +892,7 @@ partForm.addEventListener("submit", async (event) => {
     await addPart(part);
     partForm.reset();
     showSuccessToast();
-    loadItemsCount();
+    refreshFooterStatus();
     refreshResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {
@@ -938,4 +959,4 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 renderResults();
-loadItemsCount();
+refreshFooterStatus();
