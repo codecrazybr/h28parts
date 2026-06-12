@@ -69,6 +69,10 @@ function withTimeout(promise, message = "A conexão demorou demais. Tente novame
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 function showLoading(message = "Carregando...") {
   loadingCount += 1;
 
@@ -225,6 +229,8 @@ function setConnectionStatus(status) {
 }
 
 async function refreshFooterStatus({ showLoader = true } = {}) {
+  const startedAt = Date.now();
+
   setConnectionStatus("checking");
 
   if (showLoader) {
@@ -239,13 +245,14 @@ async function refreshFooterStatus({ showLoader = true } = {}) {
   const isOnline = await loadItemsCount();
   setConnectionStatus(isOnline ? "online" : "offline");
 
+  if (showLoader) {
+    await wait(Math.max(0, 3000 - (Date.now() - startedAt)));
+    hideLoading();
+  }
+
   if (refreshStatusButton) {
     refreshStatusButton.disabled = false;
     refreshStatusButton.textContent = "Atualizar";
-  }
-
-  if (showLoader) {
-    hideLoading();
   }
 }
 
@@ -810,7 +817,7 @@ async function confirmDeletePart() {
     await removePart(partIdPendingDelete, password);
     closeConfirmModal();
     showDeleteToast();
-    refreshFooterStatus();
+    refreshFooterStatus({ showLoader: false });
     refreshResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
@@ -934,7 +941,7 @@ partForm.addEventListener("submit", async (event) => {
     await addPart(part);
     partForm.reset();
     showSuccessToast();
-    refreshFooterStatus();
+    refreshFooterStatus({ showLoader: false });
     refreshResults();
   } catch (error) {
     if (isDuplicatePartError(error)) {

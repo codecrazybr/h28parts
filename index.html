@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260611-nadir-loading">
+  <link rel="stylesheet" href="style.css?v=20260611-nadir-logo-loader">
 </head>
 <body>
   <header class="topbar">
@@ -184,15 +184,17 @@
   <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
     <div class="nadir-loader" role="status" aria-live="polite">
       <div class="nadir-mark" aria-hidden="true">
-        <span class="nadir-n">N</span>
+        <span class="nadir-n">
+          <img src="nadir-logo.png" alt="">
+        </span>
         <span class="nadir-dot"></span>
       </div>
       <p id="loadingText">Carregando...</p>
     </div>
   </div>
 
-  <script src="supabase-config.js?v=20260611-nadir-loading"></script>
+  <script src="supabase-config.js?v=20260611-nadir-logo-loader"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260611-nadir-loading"></script>
+  <script src="script.js?v=20260611-nadir-logo-loader"></script>
 </body>
 </html>

@@ -353,24 +353,32 @@ select:focus {
   position: relative;
   display: inline-flex;
   align-items: flex-end;
-  gap: 9px;
+  gap: 8px;
   animation: nadirFloat 1.2s ease-in-out infinite;
 }
 
 .nadir-n {
-  color: var(--white);
-  font-family: Montserrat, Inter, Arial, sans-serif;
-  font-size: 54px;
-  font-weight: 700;
-  line-height: 0.85;
-  letter-spacing: 0;
-  text-transform: none;
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+}
+
+.nadir-n img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: auto;
+  height: 58px;
+  max-width: none;
+  display: block;
 }
 
 .nadir-dot {
-  width: 15px;
-  height: 15px;
-  margin-bottom: 2px;
+  width: 14px;
+  height: 14px;
+  margin-bottom: 1px;
   border-radius: 50%;
   background: var(--orange);
   box-shadow: 0 0 0 0 rgba(242, 139, 87, 0.48);
