@@ -27,6 +27,18 @@ body {
   text-transform: uppercase;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 14;
+  height: env(safe-area-inset-top, 0px);
+  background: #102154;
+  pointer-events: none;
+}
+
 button,
 input,
 select {
@@ -43,6 +55,7 @@ select {
   background: linear-gradient(135deg, #102154 0%, #2f4493 100%);
   border-bottom: 4px solid var(--orange);
   color: var(--white);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .header-content {
