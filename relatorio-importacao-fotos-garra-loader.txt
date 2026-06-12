@@ -1,0 +1,27 @@
+RELATORIO - IMPORTACAO POR FOTOS
+
+Origem:
+- WhatsApp Image 2026-06-11 at 21.55.08.jpeg
+- WhatsApp Image 2026-06-11 at 21.55.081.jpeg
+
+Arquivo SQL gerado:
+importar-itens-fotos-garra-loader.sql
+
+Total de itens preparados:
+33
+
+Regra usada:
+- Nao substituir itens repetidos.
+- Se o codigo do item ja existir, o item sera ignorado pelo Supabase.
+- Foto fica vazia.
+- Aplicacao definida como: GARRA LOADER.
+
+Itens deixados fora:
+- Linhas com codigo "***".
+- Linhas com codigo rabiscado.
+- Linhas com codigo encoberto por brilho/reflexo.
+- Linhas sem codigo legivel.
+
+Observacao:
+Alguns itens provavelmente ja existem no sistema por causa da importacao anterior.
+Isso nao causa problema, pois o SQL ignora codigos repetidos.
