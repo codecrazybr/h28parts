@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260612-app-animations">
+  <link rel="stylesheet" href="style.css?v=20260612-app-polish">
 </head>
 <body>
   <header class="topbar">
@@ -63,9 +63,26 @@
       </form>
 
       <footer class="system-status footer-status">
-        <div class="status-pill system-active"><span class="status-dot"></span>Sistema ativo</div>
-        <div class="status-pill connection-status is-checking" id="connectionStatus"><span class="status-dot"></span>Conexão: verificando</div>
-        <div class="status-pill" id="itemsCounter">Itens: carregando...</div>
+        <div class="status-pill system-active">
+          <span class="status-dot"></span>
+          <span class="status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+          </span>
+          Sistema ativo
+        </div>
+        <div class="status-pill connection-status is-checking" id="connectionStatus">
+          <span class="status-dot"></span>
+          <span class="status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0"></path><path d="M8.5 16a5 5 0 0 1 7 0"></path><path d="M12 19h.01"></path></svg>
+          </span>
+          <span class="status-text">Conexão: verificando</span>
+        </div>
+        <div class="status-pill" id="itemsCounter">
+          <span class="status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>
+          </span>
+          Itens: carregando...
+        </div>
         <button class="usage-button" id="refreshStatusButton" type="button">Atualizar</button>
       </footer>
     </section>
@@ -80,6 +97,7 @@
         </label>
       </div>
 
+      <div id="resultsSummary" class="results-summary" aria-live="polite"></div>
       <div id="results" class="results" aria-live="polite"></div>
     </section>
   </main>
@@ -193,8 +211,8 @@
     </div>
   </div>
 
-  <script src="supabase-config.js?v=20260612-app-animations"></script>
+  <script src="supabase-config.js?v=20260612-app-polish"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js?v=20260612-app-animations"></script>
+  <script src="script.js?v=20260612-app-polish"></script>
 </body>
 </html>

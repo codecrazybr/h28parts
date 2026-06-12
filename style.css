@@ -247,6 +247,24 @@ select:focus {
   font-size: 12px;
 }
 
+.status-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.status-icon svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
 .system-active {
   background: var(--blue-dark);
   border-color: var(--blue-dark);
@@ -468,6 +486,18 @@ select:focus {
   }
 }
 
+@keyframes photoZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -484,10 +514,68 @@ select:focus {
   gap: 14px;
 }
 
+.results-summary {
+  min-height: 20px;
+  margin: -6px 0 12px;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .empty-state {
   margin: 0;
   color: var(--gray-500);
   font-weight: 700;
+}
+
+.empty-state-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 98px;
+  padding: 18px;
+  border: 1px dashed var(--gray-300);
+  border-left: 5px solid var(--orange);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  color: var(--gray-800);
+  animation: cardEnter 0.24s ease both;
+}
+
+.empty-state-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.empty-state-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.empty-state-panel strong {
+  display: block;
+  color: var(--blue);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.empty-state-panel p {
+  margin: 4px 0 0;
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .part-card {
@@ -719,6 +807,7 @@ select:focus {
   position: relative;
   width: min(920px, 96vw);
   max-height: 90vh;
+  animation: photoZoomIn 0.24s ease both;
 }
 
 .photo-modal-box img {
@@ -728,6 +817,7 @@ select:focus {
   object-fit: contain;
   border-radius: 8px;
   background: var(--white);
+  box-shadow: 0 24px 70px rgba(16, 33, 84, 0.3);
 }
 
 .photo-close-button {

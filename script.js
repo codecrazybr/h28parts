@@ -19,6 +19,7 @@ const screens = document.querySelectorAll(".screen");
 const partForm = document.querySelector("#partForm");
 const formMessage = document.querySelector("#formMessage");
 const searchInput = document.querySelector("#searchInput");
+const resultsSummary = document.querySelector("#resultsSummary");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
 const connectionStatus = document.querySelector("#connectionStatus");
@@ -179,9 +180,14 @@ async function loadItemsCount() {
     return false;
   }
 
+  const setItemsCountText = (text) => {
+    const icon = itemsCounter.querySelector(".status-icon")?.outerHTML || "";
+    itemsCounter.innerHTML = `${icon}${text}`;
+  };
+
   if (!supabaseClient) {
     const total = getLocalParts().length;
-    itemsCounter.textContent = `Itens: ${total}`;
+    setItemsCountText(`Itens: ${total}`);
     return true;
   }
 
@@ -197,10 +203,10 @@ async function loadItemsCount() {
       throw error;
     }
 
-    itemsCounter.textContent = `Itens: ${count || 0}`;
+    setItemsCountText(`Itens: ${count || 0}`);
     return true;
   } catch (error) {
-    itemsCounter.textContent = "Itens: indisponível";
+    setItemsCountText("Itens: indisponível");
     return false;
   }
 }
@@ -210,22 +216,30 @@ function setConnectionStatus(status) {
     return;
   }
 
+  const statusText = connectionStatus.querySelector(".status-text");
+
   connectionStatus.classList.remove("is-online", "is-offline", "is-checking");
 
   if (status === "online") {
     connectionStatus.classList.add("is-online");
-    connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: online';
+    if (statusText) {
+      statusText.textContent = "Conexão: online";
+    }
     return;
   }
 
   if (status === "offline") {
     connectionStatus.classList.add("is-offline");
-    connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: offline';
+    if (statusText) {
+      statusText.textContent = "Conexão: offline";
+    }
     return;
   }
 
   connectionStatus.classList.add("is-checking");
-  connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: verificando';
+  if (statusText) {
+    statusText.textContent = "Conexão: verificando";
+  }
 }
 
 async function refreshFooterStatus({ showLoader = true } = {}) {
@@ -724,11 +738,18 @@ function openConfirmModal({ title, message, actionLabel, actionClass, needsPassw
 
 function renderResults() {
   results.innerHTML = "";
+  const hasSearch = Boolean(searchInput.value.trim());
+
+  if (resultsSummary) {
+    resultsSummary.textContent = hasSearch && partsCache.length
+      ? `${partsCache.length} ${partsCache.length === 1 ? "item encontrado" : "itens encontrados"}`
+      : "";
+  }
 
   if (partsCache.length === 0) {
-    results.innerHTML = searchInput.value.trim()
-      ? '<p class="empty-state">Nenhum item encontrado.</p>'
-      : '<p class="empty-state">Digite uma pesquisa para consultar os itens.</p>';
+    results.innerHTML = hasSearch
+      ? createEmptyState("Nenhum item encontrado.", "Tente buscar por nome, código, desenho ou aplicação.")
+      : createEmptyState("Digite para consultar um item.", "A pesquisa mostra somente os itens correspondentes.");
     return;
   }
 
@@ -737,7 +758,29 @@ function renderResults() {
   });
 }
 
+function createEmptyState(title, text) {
+  return `
+    <div class="empty-state-panel">
+      <div class="empty-state-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="6"></circle>
+          <path d="m16 16 4 4"></path>
+          <path d="M8.5 11h5"></path>
+        </svg>
+      </div>
+      <div>
+        <strong>${title}</strong>
+        <p>${text}</p>
+      </div>
+    </div>
+  `;
+}
+
 function renderSkeletonResults() {
+  if (resultsSummary) {
+    resultsSummary.textContent = "";
+  }
+
   results.innerHTML = Array.from({ length: 3 }, () => `
     <div class="skeleton-card" aria-hidden="true">
       <div class="skeleton-thumb"></div>
