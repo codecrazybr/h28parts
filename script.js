@@ -21,10 +21,7 @@ const formMessage = document.querySelector("#formMessage");
 const searchInput = document.querySelector("#searchInput");
 const results = document.querySelector("#results");
 const itemsCounter = document.querySelector("#itemsCounter");
-const clockStatus = document.querySelector("#clockStatus");
 const connectionStatus = document.querySelector("#connectionStatus");
-const usageButton = document.querySelector("#usageButton");
-const usageStatus = document.querySelector("#usageStatus");
 const confirmModal = document.querySelector("#confirmModal");
 const confirmTitle = document.querySelector("#confirmTitle");
 const confirmMessage = document.querySelector("#confirmMessage");
@@ -176,27 +173,6 @@ async function loadItemsCount() {
   }
 }
 
-function formatClockDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(new Date(value));
-}
-
-function formatTime(value = new Date()) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(value);
-}
-
 function setConnectionStatus(status) {
   if (!connectionStatus) {
     return;
@@ -218,91 +194,6 @@ function setConnectionStatus(status) {
 
   connectionStatus.classList.add("is-checking");
   connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: verificando';
-}
-
-async function loadClockStatus() {
-  if (!clockStatus) {
-    return;
-  }
-
-  if (!supabaseClient) {
-    clockStatus.textContent = "Relógio: local";
-    return;
-  }
-
-  try {
-    const { data, error } = await withTimeout(
-      supabaseClient
-        .from("h28_maintenance_log")
-        .select("created_at")
-        .order("created_at", { ascending: false })
-        .limit(1),
-      "Não foi possível verificar o relógio."
-    );
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data || data.length === 0) {
-      clockStatus.textContent = "Relógio: ativo";
-      return;
-    }
-
-    clockStatus.textContent = `Relógio: ${formatClockDate(data[0].created_at)}`;
-  } catch (error) {
-    clockStatus.textContent = "Relógio: sem leitura";
-  }
-}
-
-async function loadUsageStatus() {
-  if (!usageStatus || !usageButton) {
-    return;
-  }
-
-  if (!supabaseUrl) {
-    usageStatus.textContent = "Uso: Supabase não configurado";
-    return;
-  }
-
-  usageButton.disabled = true;
-  usageButton.textContent = "Atualizando...";
-  usageStatus.textContent = "Uso: atualizando...";
-  setConnectionStatus("checking");
-
-  try {
-    const response = await withTimeout(
-      fetch(`${supabaseUrl}/functions/v1/h28-usage`, {
-        method: "GET",
-        headers: {
-          apikey: supabaseAnonKey,
-          authorization: `Bearer ${supabaseAnonKey}`
-        }
-      }),
-      "Não foi possível carregar o uso."
-    );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      throw new Error(data.message || "Não foi possível carregar o uso.");
-    }
-
-    usageStatus.textContent = [
-      `Itens: ${data.totalItems}`,
-      `Base64: ${data.base64Photos} (${data.base64Mb} MB)`,
-      `Storage: ${data.storageMb} MB`,
-      `Arquivos: ${data.storageFiles}`,
-      `Atualizado às ${formatTime()}`
-    ].join(" | ");
-    setConnectionStatus("online");
-  } catch (error) {
-    usageStatus.textContent = `Uso: ${error.message}`;
-    setConnectionStatus("offline");
-  } finally {
-    usageButton.disabled = false;
-    usageButton.textContent = "Atualizar";
-  }
 }
 
 function isStorageUrl(value) {
@@ -912,8 +803,6 @@ cancelActionButton.addEventListener("click", closeConfirmModal);
 confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
 closePhotoModalButton.addEventListener("click", closePhotoModal);
-usageButton?.addEventListener("click", loadUsageStatus);
-
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
     closeConfirmModal();
@@ -1050,5 +939,3 @@ editForm.addEventListener("submit", async (event) => {
 
 renderResults();
 loadItemsCount();
-loadClockStatus();
-loadUsageStatus();
