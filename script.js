@@ -51,7 +51,7 @@ let partsCache = [];
 let confirmNeedsPassword = false;
 let searchTimer = null;
 let lastSearchToken = 0;
-let loadingCount = 0;
+let loadingCount = loadingOverlay?.classList.contains("active") ? 1 : 0;
 
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
@@ -1013,3 +1013,4 @@ editForm.addEventListener("submit", async (event) => {
 
 renderResults();
 refreshFooterStatus({ showLoader: false });
+setTimeout(hideLoading, 2000);
