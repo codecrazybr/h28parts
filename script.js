@@ -40,6 +40,8 @@ const successToast = document.querySelector("#successToast");
 const editToast = document.querySelector("#editToast");
 const deleteToast = document.querySelector("#deleteToast");
 const warningToast = document.querySelector("#warningToast");
+const loadingOverlay = document.querySelector("#loadingOverlay");
+const loadingText = document.querySelector("#loadingText");
 
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
@@ -49,6 +51,7 @@ let partsCache = [];
 let confirmNeedsPassword = false;
 let searchTimer = null;
 let lastSearchToken = 0;
+let loadingCount = 0;
 
 document.querySelector("#photo").required = false;
 document.querySelector("#editPhoto").required = false;
@@ -64,6 +67,28 @@ function withTimeout(promise, message = "A conexão demorou demais. Tente novame
   });
 
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+function showLoading(message = "Carregando...") {
+  loadingCount += 1;
+
+  if (loadingText) {
+    loadingText.textContent = message;
+  }
+
+  loadingOverlay?.classList.add("active");
+  loadingOverlay?.setAttribute("aria-hidden", "false");
+}
+
+function hideLoading() {
+  loadingCount = Math.max(loadingCount - 1, 0);
+
+  if (loadingCount > 0) {
+    return;
+  }
+
+  loadingOverlay?.classList.remove("active");
+  loadingOverlay?.setAttribute("aria-hidden", "true");
 }
 
 function getLocalParts() {
@@ -199,8 +224,12 @@ function setConnectionStatus(status) {
   connectionStatus.innerHTML = '<span class="status-dot"></span>Conexão: verificando';
 }
 
-async function refreshFooterStatus() {
+async function refreshFooterStatus({ showLoader = true } = {}) {
   setConnectionStatus("checking");
+
+  if (showLoader) {
+    showLoading("Atualizando...");
+  }
 
   if (refreshStatusButton) {
     refreshStatusButton.disabled = true;
@@ -213,6 +242,10 @@ async function refreshFooterStatus() {
   if (refreshStatusButton) {
     refreshStatusButton.disabled = false;
     refreshStatusButton.textContent = "Atualizar";
+  }
+
+  if (showLoader) {
+    hideLoading();
   }
 }
 
@@ -701,7 +734,7 @@ async function refreshResults({ loading = false } = {}) {
   const token = ++lastSearchToken;
 
   if (loading) {
-    results.innerHTML = '<p class="empty-state">Carregando itens...</p>';
+    showLoading("Pesquisando...");
   }
 
   try {
@@ -713,6 +746,10 @@ async function refreshResults({ loading = false } = {}) {
   } catch (error) {
     if (token === lastSearchToken) {
       results.innerHTML = `<p class="empty-state">${error.message}</p>`;
+    }
+  } finally {
+    if (loading) {
+      hideLoading();
     }
   }
 }
@@ -767,6 +804,8 @@ async function confirmDeletePart() {
     return;
   }
 
+  showLoading("Excluindo...");
+
   try {
     await removePart(partIdPendingDelete, password);
     closeConfirmModal();
@@ -775,6 +814,8 @@ async function confirmDeletePart() {
     refreshResults();
   } catch (error) {
     confirmMessage.textContent = error.message;
+  } finally {
+    hideLoading();
   }
 }
 
@@ -873,6 +914,7 @@ partForm.addEventListener("submit", async (event) => {
   submitButton.disabled = true;
   submitButton.textContent = "Salvando...";
   formMessage.textContent = "";
+  showLoading("Salvando...");
 
   try {
     const photoUrl = await preparePhoto(photoFile, partId);
@@ -902,6 +944,7 @@ partForm.addEventListener("submit", async (event) => {
 
     formMessage.textContent = error.message;
   } finally {
+    hideLoading();
     submitButton.disabled = false;
     submitButton.textContent = "Salvar item";
   }
@@ -915,8 +958,10 @@ editForm.addEventListener("submit", async (event) => {
 
   submitButton.disabled = true;
   submitButton.textContent = "Salvando...";
+  showLoading("Salvando...");
 
   if (!currentPart) {
+    hideLoading();
     submitButton.disabled = false;
     submitButton.textContent = "Salvar edição";
     closeEditModal();
@@ -953,10 +998,11 @@ editForm.addEventListener("submit", async (event) => {
 
     showWarningToast(error.message);
   } finally {
+    hideLoading();
     submitButton.disabled = false;
     submitButton.textContent = "Salvar edição";
   }
 });
 
 renderResults();
-refreshFooterStatus();
+refreshFooterStatus({ showLoader: false });

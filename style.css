@@ -318,6 +318,97 @@ select:focus {
   line-height: 1.35;
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(16, 33, 84, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nadir-loader {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-width: 170px;
+  padding: 22px 24px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 4px solid var(--orange);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #102154 0%, #2f4493 100%);
+  box-shadow: 0 24px 60px rgba(16, 33, 84, 0.32);
+}
+
+.nadir-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 9px;
+  animation: nadirFloat 1.2s ease-in-out infinite;
+}
+
+.nadir-n {
+  color: var(--white);
+  font-family: Montserrat, Inter, Arial, sans-serif;
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 0.85;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.nadir-dot {
+  width: 15px;
+  height: 15px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0 rgba(242, 139, 87, 0.48);
+  animation: nadirPulse 1.2s ease-in-out infinite;
+}
+
+.nadir-loader p {
+  margin: 0;
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+@keyframes nadirFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.03);
+  }
+}
+
+@keyframes nadirPulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(242, 139, 87, 0.45);
+  }
+
+  50% {
+    transform: scale(1.16);
+    box-shadow: 0 0 0 12px rgba(242, 139, 87, 0);
+  }
+}
+
 .results {
   display: grid;
   gap: 14px;
