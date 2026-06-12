@@ -737,11 +737,24 @@ function renderResults() {
   });
 }
 
+function renderSkeletonResults() {
+  results.innerHTML = Array.from({ length: 3 }, () => `
+    <div class="skeleton-card" aria-hidden="true">
+      <div class="skeleton-thumb"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
 async function refreshResults({ loading = false } = {}) {
   const token = ++lastSearchToken;
 
   if (loading) {
-    showLoading("Pesquisando...");
+    renderSkeletonResults();
   }
 
   try {
@@ -753,10 +766,6 @@ async function refreshResults({ loading = false } = {}) {
   } catch (error) {
     if (token === lastSearchToken) {
       results.innerHTML = `<p class="empty-state">${error.message}</p>`;
-    }
-  } finally {
-    if (loading) {
-      hideLoading();
     }
   }
 }
