@@ -43,6 +43,7 @@ const deleteToast = document.querySelector("#deleteToast");
 const warningToast = document.querySelector("#warningToast");
 const loadingOverlay = document.querySelector("#loadingOverlay");
 const loadingText = document.querySelector("#loadingText");
+const backToTopButton = document.querySelector("#backToTopButton");
 
 let partIdPendingDelete = null;
 let partIdPendingEdit = null;
@@ -924,6 +925,14 @@ confirmActionButton.addEventListener("click", confirmPendingAction);
 cancelEditModalButton.addEventListener("click", closeEditModal);
 closePhotoModalButton.addEventListener("click", closePhotoModal);
 refreshStatusButton?.addEventListener("click", refreshFooterStatus);
+backToTopButton?.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+window.addEventListener("scroll", () => {
+  backToTopButton?.classList.toggle("visible", window.scrollY > 360);
+}, { passive: true });
+
 confirmModal.addEventListener("click", (event) => {
   if (event.target === confirmModal) {
     closeConfirmModal();

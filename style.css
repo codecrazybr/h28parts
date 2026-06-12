@@ -177,6 +177,12 @@ label {
   color: #0f1d36;
   font-weight: 800;
   font-size: 14px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+label:focus-within {
+  color: var(--blue);
+  transform: translateY(-1px);
 }
 
 input,
@@ -193,7 +199,8 @@ select {
 input:focus,
 select:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 4px rgba(47, 68, 147, 0.12);
+  box-shadow: 0 0 0 4px rgba(47, 68, 147, 0.12), 0 10px 24px rgba(16, 33, 84, 0.08);
+  transform: translateY(-1px);
 }
 
 .form-actions,
@@ -834,6 +841,46 @@ select:focus {
   font-weight: 800;
 }
 
+.back-to-top-button {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 16;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: 0 14px 30px rgba(16, 33, 84, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.94);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.back-to-top-button.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.back-to-top-button:hover {
+  background: var(--blue-dark);
+}
+
+.back-to-top-button svg {
+  width: 23px;
+  height: 23px;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
 .success-toast,
 .edit-toast,
 .delete-toast,
@@ -915,24 +962,50 @@ select:focus {
 }
 
 @media (max-width: 720px) {
+  body {
+    scroll-padding-top: 132px;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    box-shadow: 0 12px 26px rgba(16, 33, 84, 0.18);
+  }
+
   .container {
     width: min(100% - 20px, 1180px);
   }
 
   .header-content {
     min-height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .brand-logo {
+    width: 118px;
   }
 
   .header-title {
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
 
   .header-title-divider {
-    height: 30px;
+    height: 24px;
+  }
+
+  .header-title-main {
+    font-size: 23px;
+  }
+
+  .header-title-sub {
+    font-size: 14px;
+    line-height: 1.1;
   }
 
   .tabs {
@@ -968,17 +1041,17 @@ select:focus {
   }
 
   .part-card {
-    grid-template-columns: 42px 1fr;
-    gap: 10px;
-    padding: 12px;
+    grid-template-columns: 34px 1fr;
+    gap: 8px;
+    padding: 10px 84px 10px 10px;
     align-items: start;
   }
 
   .card-actions {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    gap: 6px;
+    top: 9px;
+    right: 9px;
+    gap: 5px;
   }
 
   .part-card img,
@@ -995,22 +1068,22 @@ select:focus {
   }
 
   .part-info {
-    padding-right: 88px;
+    padding-right: 0;
   }
 
   .part-info h3 {
-    font-size: 16px;
-    margin-bottom: 7px;
+    font-size: 14px;
+    margin-bottom: 5px;
   }
 
   .part-info p {
-    font-size: 14px;
-    margin: 4px 0;
+    font-size: 12px;
+    margin: 3px 0;
   }
 
   .icon-button {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 
   .icon-button svg {
@@ -1022,5 +1095,12 @@ select:focus {
   .form-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .back-to-top-button {
+    right: 14px;
+    bottom: 14px;
+    width: 42px;
+    height: 42px;
   }
 }
